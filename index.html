@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Passcode</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root {
+    --bg-top: #241a44;
+    --bg-mid: #171034;
+    --bg-bottom: #05050d;
+    --ink: #ffffff;
+    --ink-dim: rgba(255,255,255,0.6);
+    --ink-faint: rgba(255,255,255,0.38);
+    --glass: rgba(255,255,255,0.14);
+    --glass-press: rgba(255,255,255,0.32);
+    --glass-border: rgba(255,255,255,0.16);
+    --accent: #8f9dff;
+    --dot-empty: rgba(255,255,255,0.28);
+    --page-bg: #e7e5e0;
+    --page-ink: #232022;
+  }
+
+  /* The lock screen itself is a fixed visual world — real iOS keeps it dark-glass
+     regardless of system theme, so only the page chrome around the phone adapts. */
+  @media (prefers-color-scheme: dark) {
+    :root { --page-bg: #0c0b10; --page-ink: #e9e6e2; }
+  }
+  :root[data-theme="dark"] { --page-bg: #0c0b10; --page-ink: #e9e6e2; }
+  :root[data-theme="light"] { --page-bg: #e7e5e0; --page-ink: #232022; }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    height: 100%;
+    margin: 0;
+    background: var(--page-bg);
+    color: var(--page-ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+    overflow: hidden;
+  }
+
+  .stage {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  .phone {
+    position: relative;
+    width: min(390px, 100%);
+    height: min(844px, 92vh);
+    aspect-ratio: 390 / 844;
+    border-radius: 54px;
+    padding: 12px;
+    background: linear-gradient(160deg, #3a3f4a, #111318 60%);
+    box-shadow:
+      0 30px 60px -20px rgba(0,0,0,0.55),
+      0 0 0 1px rgba(255,255,255,0.06) inset;
+  }
+
+  .screen {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: 44px;
+    overflow: hidden;
+    background:
+      radial-gradient(120% 60% at 50% -10%, #4a3f86 0%, transparent 55%),
+      linear-gradient(190deg, var(--bg-top) 0%, var(--bg-mid) 48%, var(--bg-bottom) 100%);
+    display: flex;
+    flex-direction: column;
+    color: var(--ink);
+    user-select: none;
+  }
+
+  .screen::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(70% 40% at 50% 0%, rgba(255,255,255,0.08), transparent 60%);
+    pointer-events: none;
+  }
+
+  /* status bar */
+  .statusbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 28px 0;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    font-variant-numeric: tabular-nums;
+    flex: 0 0 auto;
+  }
+  .statusbar .icons { display: flex; align-items: center; gap: 6px; }
+  .statusbar svg { display: block; }
+
+  .island {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100px;
+    height: 30px;
+    background: #000;
+    border-radius: 16px;
+    z-index: 5;
+  }
+
+  /* clock */
+  .clockwrap {
+    flex: 0 0 auto;
+    text-align: center;
+    margin-top: 6px;
+    transition: opacity 0.35s ease, transform 0.35s ease;
+  }
+  .clock {
+    font-size: 84px;
+    font-weight: 200;
+    line-height: 1;
+    letter-spacing: -1px;
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 2px 24px rgba(0,0,0,0.25);
+  }
+  .date {
+    margin-top: 6px;
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--ink);
+    text-shadow: 0 1px 12px rgba(0,0,0,0.2);
+  }
+
+  /* passcode section */
+  .lockbody {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 22px;
+    padding-bottom: 18px;
+  }
+
+  .headline {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink);
+    padding: 10px 18px;
+    border-radius: 12px;
+    transition: background 0.25s ease, transform 0.25s ease;
+    cursor: default;
+  }
+  .headline.pulse {
+    background: rgba(255,255,255,0.12);
+    transform: scale(1.04);
+  }
+
+  .modehint {
+    position: relative;
+    margin-top: -14px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink-faint);
+    height: 14px;
+    opacity: 0;
+    transform: translateY(-4px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    letter-spacing: 0.4px;
+  }
+  .modehint.show { opacity: 1; transform: translateY(0); }
+
+  .dots {
+    display: flex;
+    gap: 20px;
+    height: 14px;
+    align-items: center;
+  }
+  .dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 1.5px solid var(--dot-empty);
+    background: transparent;
+    transition: background 0.15s ease, transform 0.15s ease, border-color 0.15s ease;
+  }
+  .dot.filled {
+    background: var(--ink);
+    border-color: var(--ink);
+    transform: scale(1.05);
+  }
+
+  .dots.shake { animation: shake 0.4s ease; }
+  @keyframes shake {
+    10%, 90% { transform: translateX(-1px); }
+    20%, 80% { transform: translateX(3px); }
+    30%, 50%, 70% { transform: translateX(-7px); }
+    40%, 60% { transform: translateX(7px); }
+  }
+
+  /* keypad */
+  .keypad {
+    display: grid;
+    grid-template-columns: repeat(3, 74px);
+    grid-auto-rows: 74px;
+    gap: 18px;
+    justify-content: center;
+  }
+  @media (max-width: 380px) {
+    .keypad { grid-template-columns: repeat(3, 64px); grid-auto-rows: 64px; gap: 14px; }
+  }
+
+  .key {
+    border: none;
+    border-radius: 50%;
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    color: var(--ink);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    font-weight: 400;
+    line-height: 1;
+    cursor: pointer;
+    backdrop-filter: blur(6px);
+  }
+  .key .sub {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    margin-top: 3px;
+    color: var(--ink-dim);
+  }
+  .key:active { background: var(--glass-press); }
+  .key.ghost { background: transparent; border-color: transparent; cursor: default; }
+
+  .keyrow-bottom {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 300px;
+    margin: 0 auto;
+    padding: 4px 6px 2px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink);
+    flex: 0 0 auto;
+  }
+  .keyrow-bottom span { opacity: 0.9; }
+
+  .homebar {
+    flex: 0 0 auto;
+    display: flex;
+    justify-content: center;
+    padding: 10px 0 8px;
+  }
+  .homebar i {
+    width: 134px;
+    height: 5px;
+    border-radius: 3px;
+    background: rgba(255,255,255,0.85);
+    display: block;
+  }
+
+  /* result screen */
+  .result {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    text-align: center;
+    padding: 32px;
+    opacity: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(120% 60% at 50% -10%, #4a3f86 0%, transparent 55%),
+      linear-gradient(190deg, var(--bg-top) 0%, var(--bg-mid) 48%, var(--bg-bottom) 100%);
+    transition: opacity 0.5s ease;
+  }
+  .result.show { opacity: 1; pointer-events: auto; }
+
+  .clockwrap.hidden, .lockbody.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .result .eyebrow {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .result .value {
+    font-size: 64px;
+    font-weight: 200;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -1px;
+  }
+  .result .formula {
+    font-size: 14px;
+    color: var(--ink-dim);
+    font-variant-numeric: tabular-nums;
+  }
+  .result button {
+    margin-top: 26px;
+    padding: 12px 26px;
+    border-radius: 22px;
+    border: 1px solid var(--glass-border);
+    background: var(--glass);
+    color: var(--ink);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    backdrop-filter: blur(6px);
+  }
+  .result button:active { background: var(--glass-press); }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition-duration: 0.001ms !important; animation-duration: 0.001ms !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="phone">
+    <div class="screen" id="screen">
+      <div class="island"></div>
+
+      <div class="statusbar">
+        <span id="statusTime">9:41</span>
+        <div class="icons">
+          <svg width="18" height="11" viewBox="0 0 18 11" fill="none"><rect x="0" y="6" width="3" height="5" rx="0.5" fill="white"/><rect x="4.5" y="4" width="3" height="7" rx="0.5" fill="white"/><rect x="9" y="2" width="3" height="9" rx="0.5" fill="white"/><rect x="13.5" y="0" width="3" height="11" rx="0.5" fill="white"/></svg>
+          <svg width="16" height="12" viewBox="0 0 16 12" fill="none"><path d="M8 9.5a1.4 1.4 0 100 2.8 1.4 1.4 0 000-2.8zM4.7 6.9a4.6 4.6 0 016.6 0l-1.2 1.2a2.9 2.9 0 00-4.2 0L4.7 6.9zM2 4.3a8.3 8.3 0 0112 0L12.8 5.5a6.6 6.6 0 00-9.6 0L2 4.3z" fill="white"/></svg>
+          <svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x="0.75" y="0.75" width="20.5" height="10.5" rx="2.5" stroke="white" stroke-opacity="0.5" fill="none"/><rect x="2" y="2" width="16" height="8" rx="1.5" fill="white"/><rect x="22.5" y="4" width="1.7" height="4" rx="0.8" fill="white" fill-opacity="0.5"/></svg>
+        </div>
+      </div>
+
+      <div class="clockwrap" id="clockwrap">
+        <div class="clock" id="clock">9:41</div>
+        <div class="date" id="date">Saturday, July 25</div>
+      </div>
+
+      <div class="lockbody" id="lockbody">
+        <div>
+          <div class="headline" id="headline">Enter Passcode</div>
+          <div class="modehint" id="modehint">4-Digit Code</div>
+        </div>
+        <div class="dots" id="dots"></div>
+
+        <div class="keypad" id="keypad">
+          <!-- built by JS -->
+        </div>
+
+        <div class="keyrow-bottom">
+          <span id="emergency">Emergency</span>
+        </div>
+      </div>
+
+      <div class="result" id="result">
+        <div class="eyebrow">Result</div>
+        <div class="value" id="resultValue">0</div>
+        <div class="formula" id="resultFormula">code &minus; 2026</div>
+        <button id="againBtn">Try Another Code</button>
+      </div>
+
+      <div class="homebar"><i></i></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    var digitMode = 6;
+    var entered = "";
+    var doubleTapWindow = 320;
+    var lastTap = 0;
+
+    var dotsEl = document.getElementById("dots");
+    var headlineEl = document.getElementById("headline");
+    var modehintEl = document.getElementById("modehint");
+    var keypadEl = document.getElementById("keypad");
+    var resultEl = document.getElementById("result");
+    var resultValueEl = document.getElementById("resultValue");
+    var resultFormulaEl = document.getElementById("resultFormula");
+    var lockbodyEl = document.getElementById("lockbody");
+    var clockwrapEl = document.getElementById("clockwrap");
+    var againBtn = document.getElementById("againBtn");
+
+    var keys = [
+      { d: "1", s: "" },
+      { d: "2", s: "ABC" },
+      { d: "3", s: "DEF" },
+      { d: "4", s: "GHI" },
+      { d: "5", s: "JKL" },
+      { d: "6", s: "MNO" },
+      { d: "7", s: "PQRS" },
+      { d: "8", s: "TUV" },
+      { d: "9", s: "WXYZ" },
+      { d: "", s: "", ghost: true },
+      { d: "0", s: "" },
+      { d: "del", s: "", del: true }
+    ];
+
+    keys.forEach(function (k) {
+      var btn = document.createElement("button");
+      btn.className = "key" + (k.ghost ? " ghost" : "");
+      if (k.ghost) {
+        keypadEl.appendChild(btn);
+        return;
+      }
+      if (k.del) {
+        btn.innerHTML = '<svg width="26" height="20" viewBox="0 0 26 20" fill="none"><path d="M9 1h14a2 2 0 012 2v14a2 2 0 01-2 2H9a2 2 0 01-1.5-.68L.8 10.7a1 1 0 010-1.4L7.5 1.68A2 2 0 019 1z" stroke="white" stroke-opacity="0.9" stroke-width="1.4"/><path d="M13.5 7l6 6M19.5 7l-6 6" stroke="white" stroke-opacity="0.9" stroke-width="1.4" stroke-linecap="round"/></svg>';
+        btn.addEventListener("click", function () {
+          entered = entered.slice(0, -1);
+          renderDots();
+        });
+      } else {
+        btn.innerHTML = '<span>' + k.d + '</span>' + (k.s ? '<span class="sub">' + k.s + '</span>' : '');
+        btn.addEventListener("click", function () {
+          if (entered.length >= digitMode) return;
+          entered += k.d;
+          renderDots();
+          if (entered.length === digitMode) {
+            setTimeout(submit, 180);
+          }
+        });
+      }
+      keypadEl.appendChild(btn);
+    });
+
+    function renderDots() {
+      dotsEl.innerHTML = "";
+      for (var i = 0; i < digitMode; i++) {
+        var d = document.createElement("div");
+        d.className = "dot" + (i < entered.length ? " filled" : "");
+        dotsEl.appendChild(d);
+      }
+    }
+
+    function submit() {
+      var n = parseInt(entered, 10);
+      var result = n - 2026;
+      var minusSign = String.fromCharCode(8722);
+      resultValueEl.textContent = result;
+      resultFormulaEl.textContent = entered + " " + minusSign + " 2026 = " + result;
+      resultEl.classList.add("show");
+      clockwrapEl.classList.add("hidden");
+      lockbodyEl.classList.add("hidden");
+    }
+
+    function reset() {
+      entered = "";
+      renderDots();
+      resultEl.classList.remove("show");
+      clockwrapEl.classList.remove("hidden");
+      lockbodyEl.classList.remove("hidden");
+    }
+
+    againBtn.addEventListener("click", reset);
+
+    // secret gesture: double-tap the "Enter Passcode" headline to switch 4/6 digit mode
+    headlineEl.addEventListener("click", function () {
+      var now = Date.now();
+      if (now - lastTap < doubleTapWindow) {
+        digitMode = digitMode === 6 ? 4 : 6;
+        entered = "";
+        renderDots();
+        headlineEl.classList.add("pulse");
+        modehintEl.textContent = digitMode + "-Digit Code";
+        modehintEl.classList.add("show");
+        setTimeout(function () { headlineEl.classList.remove("pulse"); }, 250);
+        setTimeout(function () { modehintEl.classList.remove("show"); }, 1100);
+        lastTap = 0;
+      } else {
+        lastTap = now;
+      }
+    });
+
+    renderDots();
+
+    // live clock
+    function pad(n) { return n < 10 ? "0" + n : "" + n; }
+    function updateClock() {
+      var now = new Date();
+      var h = now.getHours();
+      var ampmH = h % 12 === 0 ? 12 : h % 12;
+      var timeStr = ampmH + ":" + pad(now.getMinutes());
+      document.getElementById("clock").textContent = timeStr;
+      document.getElementById("statusTime").textContent = timeStr;
+      var days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+      var months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+      document.getElementById("date").textContent = days[now.getDay()] + ", " + months[now.getMonth()] + " " + now.getDate();
+    }
+    updateClock();
+    setInterval(updateClock, 1000 * 10);
+  })();
+</script>
+</body>
+</html>
