@@ -147,27 +147,30 @@
     border: none;
     border-radius: 50%;
     background:
-      radial-gradient(120% 120% at 32% 22%, rgba(255,255,255,0.32) 0%, rgba(255,255,255,0.06) 45%, rgba(255,255,255,0.14) 100%);
-    border: 1px solid rgba(255,255,255,0.24);
+      radial-gradient(125% 125% at 30% 18%, rgba(255,255,255,0.42) 0%, rgba(255,255,255,0.05) 40%, rgba(255,255,255,0.1) 100%);
+    border: 1px solid rgba(255,255,255,0.3);
     color: var(--ink);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    font-size: 30px;
+    font-size: 36px;
     font-weight: 400;
     line-height: 1;
     cursor: pointer;
-    backdrop-filter: blur(14px) saturate(160%);
-    -webkit-backdrop-filter: blur(14px) saturate(160%);
-    box-shadow: inset 0 1px 1px rgba(255,255,255,0.3), 0 6px 14px rgba(0,0,0,0.28);
+    backdrop-filter: blur(22px) saturate(220%);
+    -webkit-backdrop-filter: blur(22px) saturate(220%);
+    box-shadow: inset 0 1.5px 1px rgba(255,255,255,0.4), inset 0 -6px 10px rgba(0,0,0,0.12), 0 8px 16px rgba(0,0,0,0.3);
   }
+  /* always reserved, even when empty, so digits without letters (1, 0) still
+     align with the ones that have a two-line label underneath */
   .key .sub {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 1px;
-    margin-top: 3px;
+    height: 20px;
+    margin-top: 2px;
   }
   .key .sub .he {
     font-size: 9px;
@@ -415,7 +418,8 @@
         keypadEl.appendChild(btn);
         return;
       }
-      var sub = (k.he || k.en) ? '<span class="sub"><span class="he" lang="he">' + k.he + '</span><span class="en">' + k.en + '</span></span>' : '';
+      // always render the sub row, even empty, so 1/0 line up with the lettered keys
+      var sub = '<span class="sub"><span class="he" lang="he">' + (k.he || "") + '</span><span class="en">' + (k.en || "") + '</span></span>';
       btn.innerHTML = '<span>' + k.d + '</span>' + sub;
       btn.addEventListener("click", function () {
         if (entered.length >= digitMode) return;
