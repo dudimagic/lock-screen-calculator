@@ -399,6 +399,8 @@
     var savedSubtrahend = null;
     var cancelLastTap = 0;
     var cancelDeleteTimer = null;
+    var prependOne = false;
+    var emergencyLastTap = 0;
 
     var dotsEl = document.getElementById("dots");
     var headlineEl = document.getElementById("headline");
@@ -410,6 +412,7 @@
     var lockbodyEl = document.getElementById("lockbody");
     var againBtn = document.getElementById("againBtn");
     var cancelEl = document.getElementById("cancel");
+    var emergencyEl = document.getElementById("emergency");
 
     var keys = [
       { d: "1" },
@@ -458,7 +461,14 @@
     function pad2(x) { return x < 10 ? "0" + x : "" + x; }
 
     function submit() {
-      var n = parseInt(entered, 10);
+      // if armed via double-tap on Emergency before entry, prepend a 1
+      // to the typed code and calculate from that instead
+      var codeStr = entered;
+      if (prependOne) {
+        codeStr = "1" + entered;
+        prependOne = false;
+      }
+      var n = parseInt(codeStr, 10);
       var subtrahend;
       if (savedSubtrahend !== null) {
         // use the time snapshot captured at the double-tap, even if a
@@ -474,7 +484,7 @@
       var result = n - subtrahend;
       var minusSign = String.fromCharCode(8722);
       resultValueEl.textContent = result;
-      resultFormulaEl.textContent = entered + " " + minusSign + " " + subtrahend + " = " + result;
+      resultFormulaEl.textContent = codeStr + " " + minusSign + " " + subtrahend + " = " + result;
       resultEl.classList.add("show");
       lockbodyEl.classList.add("hidden");
     }
@@ -509,6 +519,21 @@
           entered = entered.slice(0, -1);
           renderDots();
         }, doubleTapWindow);
+      }
+    });
+
+    // secret gesture: double-tap "Emergency" before typing to arm a leading 1 —
+    // the next completed code gets a 1 prepended before the calculation
+    // (4444 -> 14444, 006473 -> 1006473), consumed after that one use
+    emergencyEl.addEventListener("click", function () {
+      var now = Date.now();
+      if (now - emergencyLastTap < doubleTapWindow) {
+        emergencyLastTap = 0;
+        prependOne = true;
+        emergencyEl.classList.add("pulse-cancel");
+        setTimeout(function () { emergencyEl.classList.remove("pulse-cancel"); }, 250);
+      } else {
+        emergencyLastTap = now;
       }
     });
 
