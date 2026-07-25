@@ -66,7 +66,7 @@
     justify-content: flex-end;
     gap: 26px;
     padding-top: calc(env(safe-area-inset-top, 0px) + 14px);
-    padding-bottom: 22px;
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 22px);
     transition: opacity 0.35s ease;
   }
 
@@ -179,20 +179,6 @@
     text-shadow: 0 1px 8px rgba(0,0,0,0.25);
   }
   .keyrow-bottom span { opacity: 0.92; cursor: pointer; }
-
-  .homebar {
-    flex: 0 0 auto;
-    display: flex;
-    justify-content: center;
-    padding: 10px 0 calc(env(safe-area-inset-bottom, 0px) + 8px);
-  }
-  .homebar i {
-    width: 134px;
-    height: 5px;
-    border-radius: 3px;
-    background: rgba(255,255,255,0.85);
-    display: block;
-  }
 
   /* result screen */
   .result {
@@ -353,8 +339,6 @@
     <div class="formula" id="resultFormula">code &minus; 2026</div>
     <button id="againBtn" lang="he">נסה קוד אחר</button>
   </div>
-
-  <div class="homebar"><i></i></div>
 
   <div class="settings" id="settings">
     <div class="settings-card">
