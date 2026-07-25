@@ -160,6 +160,13 @@
     backdrop-filter: blur(22px) saturate(220%);
     -webkit-backdrop-filter: blur(22px) saturate(220%);
   }
+  /* the digit itself carries no fill color of its own — just a thin bright rim,
+     so what shows through is whatever color sits behind the glass */
+  .key .num {
+    color: rgba(255,255,255,0.1);
+    -webkit-text-stroke: 1px rgba(255,255,255,0.6);
+    text-shadow: 0 1px 2px rgba(255,255,255,0.3), 0 -1px 2px rgba(0,0,0,0.2);
+  }
   /* always reserved, even when empty, so digits without letters (1, 0) still
      align with the ones that have a two-line label underneath */
   .key .sub {
@@ -418,7 +425,7 @@
       }
       // always render the sub row, even empty, so 1/0 line up with the lettered keys
       var sub = '<span class="sub"><span class="he" lang="he">' + (k.he || "") + '</span><span class="en">' + (k.en || "") + '</span></span>';
-      btn.innerHTML = '<span>' + k.d + '</span>' + sub;
+      btn.innerHTML = '<span class="num">' + k.d + '</span>' + sub;
       btn.addEventListener("click", function () {
         if (entered.length >= digitMode) return;
         entered += k.d;
