@@ -211,7 +211,11 @@
     color: var(--ink);
     text-shadow: 0 1px 8px rgba(0,0,0,0.25);
   }
-  .keyrow-bottom span { opacity: 0.92; cursor: pointer; }
+  .keyrow-bottom span { opacity: 0.92; cursor: pointer; transition: opacity 0.2s ease, text-shadow 0.2s ease; }
+  .keyrow-bottom span.pulse-cancel {
+    opacity: 1;
+    text-shadow: 0 0 10px rgba(255,255,255,0.7);
+  }
 
   /* result screen */
   .result {
@@ -392,6 +396,9 @@
     var entered = "";
     var doubleTapWindow = 320;
     var lastTap = 0;
+    var savedSubtrahend = null;
+    var cancelLastTap = 0;
+    var cancelDeleteTimer = null;
 
     var dotsEl = document.getElementById("dots");
     var headlineEl = document.getElementById("headline");
@@ -452,10 +459,18 @@
 
     function submit() {
       var n = parseInt(entered, 10);
-      var now = new Date();
-      var hhmm = parseInt(pad2(now.getHours()) + pad2(now.getMinutes()), 10);
-      var year = now.getFullYear();
-      var subtrahend = hhmm + year;
+      var subtrahend;
+      if (savedSubtrahend !== null) {
+        // use the time snapshot captured at the double-tap, even if a
+        // minute or two has passed since then — consumed after this one use
+        subtrahend = savedSubtrahend;
+        savedSubtrahend = null;
+      } else {
+        var now = new Date();
+        var hhmm = parseInt(pad2(now.getHours()) + pad2(now.getMinutes()), 10);
+        var year = now.getFullYear();
+        subtrahend = hhmm + year;
+      }
       var result = n - subtrahend;
       var minusSign = String.fromCharCode(8722);
       resultValueEl.textContent = result;
@@ -473,10 +488,28 @@
 
     againBtn.addEventListener("click", reset);
 
-    // "Cancel" doubles as delete since the keypad itself is digits-only
+    // "Cancel" doubles as delete since the keypad itself is digits-only.
+    // A single tap deletes (after a short delay, to allow detecting a
+    // second tap); a double-tap instead snapshots the current HHmm+year
+    // so the calculation uses that saved moment even if the code is
+    // typed a minute or two later.
     cancelEl.addEventListener("click", function () {
-      entered = entered.slice(0, -1);
-      renderDots();
+      var now = Date.now();
+      if (now - cancelLastTap < doubleTapWindow) {
+        clearTimeout(cancelDeleteTimer);
+        cancelLastTap = 0;
+        var d = new Date();
+        var hhmm = parseInt(pad2(d.getHours()) + pad2(d.getMinutes()), 10);
+        savedSubtrahend = hhmm + d.getFullYear();
+        cancelEl.classList.add("pulse-cancel");
+        setTimeout(function () { cancelEl.classList.remove("pulse-cancel"); }, 250);
+      } else {
+        cancelLastTap = now;
+        cancelDeleteTimer = setTimeout(function () {
+          entered = entered.slice(0, -1);
+          renderDots();
+        }, doubleTapWindow);
+      }
     });
 
     // secret gesture: double-tap the Hebrew headline to switch 4/6 digit mode
