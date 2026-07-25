@@ -66,7 +66,12 @@
     gap: 26px;
     padding-top: calc(env(safe-area-inset-top, 0px) + 14px);
     padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 112px);
-    transition: opacity 0.35s ease;
+    transition: opacity 0.4s ease, transform 0.4s ease;
+  }
+  .lockbody.hidden {
+    opacity: 0;
+    transform: scale(1.08);
+    pointer-events: none;
   }
 
   .headline {
@@ -216,68 +221,110 @@
   }
   #armDot.show { opacity: 1; }
 
-  /* result screen */
-  .result {
+  /* fake home screen — revealed with an iOS-style unlock zoom */
+  .homescreen {
     position: absolute;
     inset: 0;
     z-index: 10;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    text-align: center;
-    padding: 32px;
     opacity: 0;
+    transform: scale(0.9);
     pointer-events: none;
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 14px);
     background:
       radial-gradient(55% 32% at 72% 5%, #6ea8ff 0%, transparent 62%),
       radial-gradient(65% 40% at 16% 18%, #3b6bef 0%, transparent 58%),
+      radial-gradient(60% 42% at 84% 40%, #2447c4 0%, transparent 60%),
       radial-gradient(65% 38% at 22% 55%, #16297e 0%, transparent 58%),
       linear-gradient(180deg, #0a1442 0%, #071033 32%, #050a20 52%, #02040c 72%, #000000 92%);
-    transition: opacity 0.5s ease;
+    transition: opacity 0.45s ease, transform 0.45s ease;
   }
-  .result.show { opacity: 1; pointer-events: auto; }
+  .homescreen.show { opacity: 1; transform: scale(1); pointer-events: auto; }
 
-  .lockbody.hidden {
-    opacity: 0;
-    pointer-events: none;
-  }
-  .result .eyebrow {
-    font-size: 13px;
-    font-weight: 600;
-    letter-spacing: 1.2px;
-    text-transform: uppercase;
-    color: var(--ink-faint);
-  }
-  .result .value {
-    font-size: 64px;
-    font-weight: 200;
-    font-variant-numeric: tabular-nums;
-    letter-spacing: -1px;
+  .app-grid {
+    flex: 1 1 auto;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    justify-items: center;
+    align-content: start;
+    gap: 22px 8px;
+    padding: 0 20px;
+    margin-top: calc(env(safe-area-inset-top, 0px) + 22px);
     direction: ltr;
   }
-  .result .formula {
-    font-size: 14px;
-    color: var(--ink-dim);
-    font-variant-numeric: tabular-nums;
-    direction: ltr;
+  .app {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    cursor: default;
   }
-  .result button {
-    margin-top: 26px;
-    padding: 12px 26px;
-    border-radius: 22px;
-    border: 1px solid var(--glass-border);
-    background: var(--glass);
+  /* .app-icon is just a positioning box so the badge (which pokes outside
+     via negative offsets) isn't clipped by the face's own rounded overflow */
+  .app-icon {
+    position: relative;
+    width: 58px;
+    height: 58px;
+  }
+  .app-icon-face {
+    width: 100%;
+    height: 100%;
+    border-radius: 15px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.18);
+  }
+  .app-icon svg { width: 68%; height: 68%; display: block; }
+  .app-label {
+    font-size: 11px;
+    font-weight: 500;
     color: var(--ink);
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    font-family: inherit;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+    text-align: center;
   }
-  .result button:active { background: var(--glass-press); }
+  .app.mail-app { cursor: pointer; }
+
+  .badge {
+    position: absolute;
+    top: -6px;
+    right: -8px;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 5px;
+    border-radius: 10px;
+    background: #ff3b30;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.45);
+    font-variant-numeric: tabular-nums;
+    direction: ltr;
+    z-index: 1;
+  }
+
+  .dock {
+    flex: 0 0 auto;
+    margin: 0 16px;
+    padding: 12px 16px;
+    border-radius: 32px;
+    background: rgba(255,255,255,0.14);
+    border: 1px solid rgba(255,255,255,0.16);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    direction: ltr;
+  }
+  .dock .app-icon { width: 56px; height: 56px; }
 
   /* background settings sheet */
   .settings {
@@ -366,11 +413,9 @@
     </div>
   </div>
 
-  <div class="result" id="result">
-    <div class="eyebrow" id="resultEyebrow" lang="he">תוצאה</div>
-    <div class="value" id="resultValue">0</div>
-    <div class="formula" id="resultFormula">code &minus; 2026</div>
-    <button id="againBtn" lang="he">נסה קוד אחר</button>
+  <div class="homescreen" id="homescreen">
+    <div class="app-grid" id="appGrid"><!-- built by JS --></div>
+    <div class="dock" id="dock"><!-- built by JS --></div>
   </div>
 
   <div class="settings" id="settings">
@@ -401,11 +446,10 @@
     var dotsEl = document.getElementById("dots");
     var headlineEl = document.getElementById("headline");
     var keypadEl = document.getElementById("keypad");
-    var resultEl = document.getElementById("result");
-    var resultValueEl = document.getElementById("resultValue");
-    var resultFormulaEl = document.getElementById("resultFormula");
+    var homescreenEl = document.getElementById("homescreen");
+    var appGridEl = document.getElementById("appGrid");
+    var dockEl = document.getElementById("dock");
     var lockbodyEl = document.getElementById("lockbody");
-    var againBtn = document.getElementById("againBtn");
     var cancelEl = document.getElementById("cancel");
     var emergencyEl = document.getElementById("emergency");
     var armDotEl = document.getElementById("armDot");
@@ -461,6 +505,102 @@
       }
     }
 
+    // ---- fake home screen: app grid + dock, built the same way the keypad is ----
+    var ICON_PHONE = '<path d="M6.6 10.8c1.4 2.8 3.8 5.2 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.2c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z" fill="#fff"/>';
+    var ICON_MESSAGES = '<path d="M12 3C6.5 3 2 6.9 2 11.5c0 2.5 1.3 4.7 3.4 6.3-.1.9-.5 2.3-1.4 3.6 1.6-.2 3.4-.9 4.6-1.7 1 .3 2.2.4 3.4.4 5.5 0 10-3.9 10-8.6S17.5 3 12 3z" fill="#fff"/>';
+    var ICON_MUSIC = '<circle cx="7" cy="18" r="3" fill="#fff"/><circle cx="18" cy="16" r="3" fill="#fff"/><path d="M10 18V6l11-2v10" stroke="#fff" stroke-width="1.6" fill="none"/>';
+    var ICON_SAFARI = '<circle cx="12" cy="12" r="8.5" fill="none" stroke="#0a84ff" stroke-width="1.4"/><polygon points="12,5 14.3,12 12,12" fill="#ff453a"/><polygon points="12,12 9.7,12 12,19" fill="#eee"/>';
+    var ICON_CALENDAR = '<rect x="3" y="4" width="18" height="17" rx="3" fill="#fff"/><rect x="3" y="4" width="18" height="5" rx="3" fill="#ff3b30"/><text x="12" y="17.5" font-size="9.5" font-weight="700" text-anchor="middle" fill="#222" id="calDayNum">•</text>';
+    var ICON_CAMERA = '<rect x="3" y="7" width="18" height="12" rx="2" fill="#fff"/><rect x="8" y="4" width="8" height="3" rx="1" fill="#fff"/><circle cx="12" cy="13" r="3.2" fill="#333"/>';
+    var ICON_PHOTOS = '<circle cx="9" cy="9" r="5" fill="#ffcc00"/><circle cx="15" cy="9" r="5" fill="#34c759"/><circle cx="9" cy="15" r="5" fill="#007aff"/><circle cx="15" cy="15" r="5" fill="#ff3b30"/>';
+    var ICON_MAPS = '<path d="M12 2C8.1 2 5 5.1 5 9c0 5.3 6.1 12.2 6.4 12.5.3.3.9.3 1.2 0C13 21.2 19 14.3 19 9c0-3.9-3.1-7-7-7z" fill="#fff"/><circle cx="12" cy="9" r="2.6" fill="#1f9c46"/>';
+    var ICON_WEATHER = '<circle cx="16" cy="8" r="4" fill="#ffd60a"/><ellipse cx="10" cy="16" rx="7" ry="4.2" fill="#ffffff"/>';
+    var ICON_CLOCK = '<circle cx="12" cy="12" r="9" fill="none" stroke="#111" stroke-width="1.4"/><line x1="12" y1="12" x2="12" y2="7" stroke="#111" stroke-width="1.6" stroke-linecap="round"/><line x1="12" y1="12" x2="15.2" y2="12" stroke="#111" stroke-width="1.6" stroke-linecap="round"/>';
+    var ICON_NOTES = '<rect x="4" y="3" width="16" height="18" rx="2" fill="#fff"/><line x1="7" y1="8" x2="17" y2="8" stroke="#d8b04a" stroke-width="1.4"/><line x1="7" y1="12" x2="17" y2="12" stroke="#ccc" stroke-width="1.2"/><line x1="7" y1="16" x2="14" y2="16" stroke="#ccc" stroke-width="1.2"/>';
+    var ICON_REMINDERS = '<rect x="4" y="4" width="16" height="16" rx="3" fill="#fff"/><circle cx="8" cy="9" r="1.6" fill="#ff3b30"/><line x1="11" y1="9" x2="17" y2="9" stroke="#333" stroke-width="1.3"/><circle cx="8" cy="14" r="1.6" fill="#ff9500"/><line x1="11" y1="14" x2="17" y2="14" stroke="#333" stroke-width="1.3"/>';
+    var ICON_APPSTORE = '<polygon points="12,3 19,19 5,19" fill="#fff"/>';
+    var ICON_SETTINGS = '<path d="M12 8.5a3.5 3.5 0 100 7 3.5 3.5 0 000-7zm8.4 3.5c0-.6-.1-1.1-.2-1.6l2-1.6-2-3.4-2.3.9c-.8-.7-1.8-1.2-2.8-1.5L14.6 2H9.4l-.5 2.8c-1 .3-2 .8-2.8 1.5l-2.3-.9-2 3.4 2 1.6c-.1.5-.2 1-.2 1.6s.1 1.1.2 1.6l-2 1.6 2 3.4 2.3-.9c.8.7 1.8 1.2 2.8 1.5l.5 2.8h5.2l.5-2.8c1-.3 2-.8 2.8-1.5l2.3.9 2-3.4-2-1.6c.1-.5.2-1 .2-1.6z" fill="#fff"/>';
+    var ICON_WALLET = '<rect x="3" y="6" width="18" height="13" rx="3" fill="#333"/><rect x="3" y="10" width="18" height="3" fill="#f2c14e"/><circle cx="17" cy="15" r="1.6" fill="#fff"/>';
+    var ICON_HEALTH = '<path d="M12 20s-7-4.2-9-8C1.2 8.6 2.8 5 6.3 5c2 0 3.4 1.2 3.9 2.4C10.6 6.2 12 5 14 5c3.5 0 5.1 3.6 3.3 7-2 3.8-9 8-9 8z" fill="#ff3b30"/>';
+    var ICON_CONTACTS = '<circle cx="12" cy="8" r="4" fill="#fff"/><path d="M4 20c0-4.4 3.6-7 8-7s8 2.6 8 7" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>';
+    var ICON_FILES = '<path d="M3 7a2 2 0 012-2h4.2l1.6 2H19a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" fill="#fff"/>';
+    var ICON_MAIL = '<rect x="3" y="6" width="18" height="12" rx="2" fill="#fff"/><path d="M4 7.5l8 5.5 8-5.5" stroke="#2f6fed" stroke-width="1.4" fill="none"/>';
+
+    var gridApps = [
+      { label: "יומן", bg: ["#ffffff", "#dcdcdc"], svg: ICON_CALENDAR },
+      { label: "מצלמה", bg: ["#3a3a3c", "#1c1c1e"], svg: ICON_CAMERA },
+      { label: "תמונות", bg: ["#ffffff", "#eeeeee"], svg: ICON_PHOTOS },
+      { label: "מפות", bg: ["#34c759", "#1f9c46"], svg: ICON_MAPS },
+      { label: "מזג אוויר", bg: ["#2f8fe0", "#1462c9"], svg: ICON_WEATHER },
+      { label: "שעון", bg: ["#ffffff", "#eeeeee"], svg: ICON_CLOCK },
+      { label: "פתקים", bg: ["#ffd54f", "#ffb300"], svg: ICON_NOTES },
+      { label: "תזכורות", bg: ["#ffffff", "#eeeeee"], svg: ICON_REMINDERS },
+      { label: "App Store", bg: ["#0a84ff", "#0060df"], svg: ICON_APPSTORE },
+      { label: "הגדרות", bg: ["#8e8e93", "#636366"], svg: ICON_SETTINGS },
+      { label: "Wallet", bg: ["#2c2c2e", "#151517"], svg: ICON_WALLET },
+      { label: "בריאות", bg: ["#ffffff", "#eeeeee"], svg: ICON_HEALTH },
+      { label: "FaceTime", bg: ["#34c759", "#1f9c46"], svg: ICON_CAMERA },
+      { label: "אנשי קשר", bg: ["#8e8e93", "#636366"], svg: ICON_CONTACTS },
+      { label: "קבצים", bg: ["#0a84ff", "#0060df"], svg: ICON_FILES },
+      { label: "Mail", bg: ["#2f8fe0", "#0a5cc9"], svg: ICON_MAIL, isMail: true }
+    ];
+
+    var dockApps = [
+      { label: "טלפון", bg: ["#34c759", "#1f9c46"], svg: ICON_PHONE },
+      { label: "ספארי", bg: ["#ffffff", "#eeeeee"], svg: ICON_SAFARI },
+      { label: "הודעות", bg: ["#34c759", "#1f9c46"], svg: ICON_MESSAGES },
+      { label: "מוזיקה", bg: ["#fc3158", "#fa233b"], svg: ICON_MUSIC }
+    ];
+
+    var mailBadgeEl = null;
+
+    function buildApp(a) {
+      var wrap = document.createElement("div");
+      wrap.className = "app" + (a.isMail ? " mail-app" : "");
+      var icon = document.createElement("div");
+      icon.className = "app-icon";
+      var face = document.createElement("div");
+      face.className = "app-icon-face";
+      face.style.background = "linear-gradient(135deg, " + a.bg[0] + ", " + a.bg[1] + ")";
+      face.innerHTML = '<svg viewBox="0 0 24 24">' + a.svg + "</svg>";
+      icon.appendChild(face);
+      if (a.isMail) {
+        var badge = document.createElement("div");
+        badge.className = "badge";
+        badge.id = "mailBadge";
+        badge.textContent = "0";
+        icon.appendChild(badge);
+        mailBadgeEl = badge;
+      }
+      var label = document.createElement("div");
+      label.className = "app-label";
+      label.textContent = a.label;
+      wrap.appendChild(icon);
+      wrap.appendChild(label);
+      return wrap;
+    }
+
+    gridApps.forEach(function (a) { appGridEl.appendChild(buildApp(a)); });
+    dockApps.forEach(function (a) {
+      var app = buildApp(a);
+      app.querySelector(".app-label").remove();
+      dockEl.appendChild(app);
+    });
+
+    var calDayEl = document.getElementById("calDayNum");
+    if (calDayEl) calDayEl.textContent = new Date().getDate();
+
+    // tapping the Mail icon acknowledges the result and re-locks the phone
+    var mailAppEl = appGridEl.querySelector(".mail-app");
+    mailAppEl.addEventListener("click", function () {
+      homescreenEl.classList.remove("show");
+      setTimeout(function () {
+        entered = "";
+        renderDots();
+        lockbodyEl.classList.remove("hidden");
+      }, 300);
+    });
+
     function pad2(x) { return x < 10 ? "0" + x : "" + x; }
 
     function submit() {
@@ -486,21 +626,13 @@
         subtrahend = hhmm + year;
       }
       var result = n - subtrahend;
-      var minusSign = String.fromCharCode(8722);
-      resultValueEl.textContent = result;
-      resultFormulaEl.textContent = codeStr + " " + minusSign + " " + subtrahend + " = " + result;
-      resultEl.classList.add("show");
+      mailBadgeEl.textContent = result;
+      // unlock: lock content zooms/fades out, home screen zooms in shortly after
       lockbodyEl.classList.add("hidden");
+      setTimeout(function () {
+        homescreenEl.classList.add("show");
+      }, 120);
     }
-
-    function reset() {
-      entered = "";
-      renderDots();
-      resultEl.classList.remove("show");
-      lockbodyEl.classList.remove("hidden");
-    }
-
-    againBtn.addEventListener("click", reset);
 
     // "Cancel" doubles as delete since the keypad itself is digits-only.
     // A single tap deletes (after a short delay, to allow detecting a
