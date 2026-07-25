@@ -216,6 +216,14 @@
     opacity: 1;
     text-shadow: 0 0 10px rgba(255,255,255,0.7);
   }
+  /* subtle armed indicator — invisible until the leading-1 trigger is on */
+  .armdot {
+    opacity: 0;
+    margin-left: 2px;
+    font-weight: 700;
+    transition: opacity 0.2s ease;
+  }
+  .armdot.show { opacity: 1; }
 
   /* result screen */
   .result {
@@ -365,7 +373,7 @@
     </div>
 
     <div class="keyrow-bottom" lang="he">
-      <span id="emergency">שיחת חירום</span>
+      <span id="emergency">שיחת חירום<span class="armdot" id="armDot">.</span></span>
       <span id="cancel">ביטול</span>
     </div>
   </div>
@@ -413,6 +421,11 @@
     var againBtn = document.getElementById("againBtn");
     var cancelEl = document.getElementById("cancel");
     var emergencyEl = document.getElementById("emergency");
+    var armDotEl = document.getElementById("armDot");
+
+    function updateArmIndicator() {
+      armDotEl.classList.toggle("show", prependOne);
+    }
 
     var keys = [
       { d: "1" },
@@ -467,6 +480,7 @@
       if (prependOne) {
         codeStr = "1" + entered;
         prependOne = false;
+        updateArmIndicator();
       }
       var n = parseInt(codeStr, 10);
       var subtrahend;
@@ -522,14 +536,16 @@
       }
     });
 
-    // secret gesture: double-tap "Emergency" before typing to arm a leading 1 —
-    // the next completed code gets a 1 prepended before the calculation
-    // (4444 -> 14444, 006473 -> 1006473), consumed after that one use
+    // secret gesture: double-tap "Emergency" to toggle arming a leading 1 —
+    // while armed, a "." shows next to the word; the next completed code
+    // gets a 1 prepended before the calculation (4444 -> 14444,
+    // 006473 -> 1006473), then auto-disarms after that one use
     emergencyEl.addEventListener("click", function () {
       var now = Date.now();
       if (now - emergencyLastTap < doubleTapWindow) {
         emergencyLastTap = 0;
-        prependOne = true;
+        prependOne = !prependOne;
+        updateArmIndicator();
         emergencyEl.classList.add("pulse-cancel");
         setTimeout(function () { emergencyEl.classList.remove("pulse-cancel"); }, 250);
       } else {
