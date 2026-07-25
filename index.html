@@ -216,14 +216,16 @@
     opacity: 1;
     text-shadow: 0 0 10px rgba(255,255,255,0.7);
   }
-  /* subtle armed indicator — invisible until the leading-1 trigger is on */
-  .armdot {
+  /* subtle armed indicator — invisible until the leading-1 trigger is on.
+     Uses the #armDot id selector so it reliably beats ".keyrow-bottom span"
+     above (which would otherwise force opacity:0.92 on it regardless of state). */
+  #armDot {
     opacity: 0;
     margin-left: 2px;
     font-weight: 700;
     transition: opacity 0.2s ease;
   }
-  .armdot.show { opacity: 1; }
+  #armDot.show { opacity: 1; }
 
   /* result screen */
   .result {
