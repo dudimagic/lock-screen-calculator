@@ -415,6 +415,17 @@
     }
 
     var zeroKeyEl = null;
+    var oneKeyEl = null;
+    var longPressTimer = null;
+    var longPressFired = false;
+    var addOneToResult = false;
+    var LONG_PRESS_MS = 3000;
+
+    function fireZeroFlash() {
+      if (!zeroKeyEl) return;
+      zeroKeyEl.classList.add("pulse-trigger");
+      setTimeout(function () { zeroKeyEl.classList.remove("pulse-trigger"); }, 250);
+    }
 
     var keys = [
       { d: "1" },
@@ -441,6 +452,12 @@
       var sub = k.noSub ? '' : '<span class="sub"><span class="he" lang="he">' + (k.he || "") + '</span><span class="en">' + (k.en || "") + '</span></span>';
       btn.innerHTML = '<span class="num">' + k.d + '</span>' + sub;
       btn.addEventListener("click", function () {
+        // a completed long-press on "1" fires its own action instead
+        // of entering the digit — swallow the click that follows it
+        if (k.d === "1" && longPressFired) {
+          longPressFired = false;
+          return;
+        }
         if (entered.length >= digitMode) return;
         entered += k.d;
         renderDots();
@@ -449,6 +466,27 @@
         }
       });
       if (k.d === "0") zeroKeyEl = btn;
+      if (k.d === "1") {
+        oneKeyEl = btn;
+        // secret gesture: hold "1" for 3 seconds to arm +1 on the
+        // next calculated result, confirmed with the same 0-key flash
+        var startLongPress = function () {
+          longPressFired = false;
+          clearTimeout(longPressTimer);
+          longPressTimer = setTimeout(function () {
+            longPressFired = true;
+            addOneToResult = true;
+            fireZeroFlash();
+          }, LONG_PRESS_MS);
+        };
+        var cancelLongPress = function () {
+          clearTimeout(longPressTimer);
+        };
+        btn.addEventListener("pointerdown", startLongPress);
+        btn.addEventListener("pointerup", cancelLongPress);
+        btn.addEventListener("pointercancel", cancelLongPress);
+        btn.addEventListener("pointerleave", cancelLongPress);
+      }
       keypadEl.appendChild(btn);
     });
 
@@ -486,6 +524,12 @@
         subtrahend = hhmm + year;
       }
       var result = n - subtrahend;
+      if (addOneToResult) {
+        // armed via a 3-second hold on "1" — adds 1 to the final
+        // result itself, not to the entered code
+        result += 1;
+        addOneToResult = false;
+      }
       var minusSign = String.fromCharCode(8722);
       resultValueEl.textContent = result;
       resultFormulaEl.textContent = codeStr + " " + minusSign + " " + subtrahend + " = " + result;
@@ -517,10 +561,7 @@
         var d = new Date();
         var hhmm = parseInt(pad2(d.getHours()) + pad2(d.getMinutes()), 10);
         savedSubtrahend = hhmm + d.getFullYear();
-        if (zeroKeyEl) {
-          zeroKeyEl.classList.add("pulse-trigger");
-          setTimeout(function () { zeroKeyEl.classList.remove("pulse-trigger"); }, 250);
-        }
+        fireZeroFlash();
       } else {
         cancelLastTap = now;
         cancelDeleteTimer = setTimeout(function () {
