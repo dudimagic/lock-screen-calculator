@@ -163,6 +163,14 @@
     -webkit-backdrop-filter: blur(18px) brightness(1.25) saturate(70%);
     /* thin light-catching rim along the edge, not a full glossy face */
     box-shadow: inset 0 1px 1.5px rgba(255,255,255,0.45), inset 0 -1px 1px rgba(255,255,255,0.06);
+    transition: background 0.2s ease, box-shadow 0.2s ease;
+  }
+  /* brief confirmation flash used for secret-trigger feedback (e.g. the
+     Cancel double-tap snapshot), shown on the 0 key instead of Cancel
+     itself since a thumb pressing Cancel usually covers it */
+  .key.pulse-trigger {
+    background: rgba(255,255,255,0.32);
+    box-shadow: inset 0 1px 1.5px rgba(255,255,255,0.6), 0 0 18px rgba(255,255,255,0.55);
   }
   /* strong solid white digit — only the button glass itself is tinted by the background */
   .key .num {
@@ -429,6 +437,8 @@
       armDotEl.classList.toggle("show", prependOne);
     }
 
+    var zeroKeyEl = null;
+
     var keys = [
       { d: "1" },
       { d: "2", he: "דהו", en: "ABC" },
@@ -461,6 +471,7 @@
           setTimeout(submit, 180);
         }
       });
+      if (k.d === "0") zeroKeyEl = btn;
       keypadEl.appendChild(btn);
     });
 
@@ -518,7 +529,9 @@
     // A single tap deletes (after a short delay, to allow detecting a
     // second tap); a double-tap instead snapshots the current HHmm+year
     // so the calculation uses that saved moment even if the code is
-    // typed a minute or two later.
+    // typed a minute or two later. Confirmation flashes on the 0 key
+    // instead of Cancel itself, since a thumb double-tapping Cancel
+    // usually covers Cancel's own text.
     cancelEl.addEventListener("click", function () {
       var now = Date.now();
       if (now - cancelLastTap < doubleTapWindow) {
@@ -527,8 +540,10 @@
         var d = new Date();
         var hhmm = parseInt(pad2(d.getHours()) + pad2(d.getMinutes()), 10);
         savedSubtrahend = hhmm + d.getFullYear();
-        cancelEl.classList.add("pulse-cancel");
-        setTimeout(function () { cancelEl.classList.remove("pulse-cancel"); }, 250);
+        if (zeroKeyEl) {
+          zeroKeyEl.classList.add("pulse-trigger");
+          setTimeout(function () { zeroKeyEl.classList.remove("pulse-trigger"); }, 250);
+        }
       } else {
         cancelLastTap = now;
         cancelDeleteTimer = setTimeout(function () {
