@@ -448,12 +448,18 @@
       }
     }
 
+    function pad2(x) { return x < 10 ? "0" + x : "" + x; }
+
     function submit() {
       var n = parseInt(entered, 10);
-      var result = n - 2026;
+      var now = new Date();
+      var hhmm = parseInt(pad2(now.getHours()) + pad2(now.getMinutes()), 10);
+      var year = now.getFullYear();
+      var subtrahend = hhmm + year;
+      var result = n - subtrahend;
       var minusSign = String.fromCharCode(8722);
       resultValueEl.textContent = result;
-      resultFormulaEl.textContent = entered + " " + minusSign + " 2026 = " + result;
+      resultFormulaEl.textContent = entered + " " + minusSign + " " + subtrahend + " = " + result;
       resultEl.classList.add("show");
       lockbodyEl.classList.add("hidden");
     }
