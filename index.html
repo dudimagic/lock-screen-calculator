@@ -75,28 +75,9 @@
     color: var(--ink);
     padding: 10px 18px;
     border-radius: 12px;
-    transition: background 0.25s ease, transform 0.25s ease;
     cursor: default;
     text-shadow: 0 1px 10px rgba(0,0,0,0.25);
   }
-  .headline.pulse {
-    background: rgba(255,255,255,0.14);
-    transform: scale(1.04);
-  }
-
-  .modehint {
-    position: relative;
-    margin-top: -18px;
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--ink-faint);
-    height: 14px;
-    opacity: 0;
-    transform: translateY(-4px);
-    transition: opacity 0.3s ease, transform 0.3s ease;
-    letter-spacing: 0.4px;
-  }
-  .modehint.show { opacity: 1; transform: translateY(0); }
 
   .dots {
     display: flex;
@@ -372,10 +353,7 @@
 <div class="screen" id="screen">
 
   <div class="lockbody" id="lockbody">
-    <div>
-      <div class="headline" id="headline" lang="he">יש להזין את קוד הגישה</div>
-      <div class="modehint" id="modehint" lang="he">קוד בן 4 ספרות</div>
-    </div>
+    <div class="headline" id="headline" lang="he">יש להזין את קוד הגישה</div>
     <div class="dots" id="dots"></div>
 
     <div class="keypad" id="keypad">
@@ -422,7 +400,6 @@
 
     var dotsEl = document.getElementById("dots");
     var headlineEl = document.getElementById("headline");
-    var modehintEl = document.getElementById("modehint");
     var keypadEl = document.getElementById("keypad");
     var resultEl = document.getElementById("result");
     var resultValueEl = document.getElementById("resultValue");
@@ -570,18 +547,14 @@
       }
     });
 
-    // secret gesture: double-tap the Hebrew headline to switch 4/6 digit mode
+    // secret gesture: double-tap the Hebrew headline to switch 4/6 digit mode —
+    // no visual feedback beyond the dot count itself changing
     headlineEl.addEventListener("click", function () {
       var now = Date.now();
       if (now - lastTap < doubleTapWindow) {
         digitMode = digitMode === 6 ? 4 : 6;
         entered = "";
         renderDots();
-        headlineEl.classList.add("pulse");
-        modehintEl.textContent = digitMode === 4 ? "קוד בן 4 ספרות" : "קוד בן 6 ספרות";
-        modehintEl.classList.add("show");
-        setTimeout(function () { headlineEl.classList.remove("pulse"); }, 250);
-        setTimeout(function () { modehintEl.classList.remove("show"); }, 1100);
         lastTap = 0;
       } else {
         lastTap = now;
