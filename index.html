@@ -163,18 +163,20 @@
   .key.ghost { background: transparent; border-color: transparent; cursor: default; }
 
   .keyrow-bottom {
-    position: relative;
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
     z-index: 6;
     display: flex;
     justify-content: space-between;
     width: 100%;
-    max-width: 250px;
-    margin: 14px auto 0;
+    max-width: 280px;
+    margin: 0 auto;
     padding: 6px 10px 2px;
-    font-size: 15px;
+    font-size: 17px;
     font-weight: 500;
     color: var(--ink);
-    flex: 0 0 auto;
     text-shadow: 0 1px 8px rgba(0,0,0,0.25);
   }
   .keyrow-bottom span { opacity: 0.92; cursor: pointer; }
