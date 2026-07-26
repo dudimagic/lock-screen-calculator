@@ -416,6 +416,29 @@
   .settings-btn:active { background: var(--glass-press); }
   .settings-btn.ghost-btn { background: transparent; color: var(--ink-dim); border-color: transparent; }
 
+  .attempt-picker {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+  }
+  .attempt-picker button {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--glass-border);
+    background: var(--glass);
+    color: var(--ink);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .attempt-picker button.active {
+    background: #8f9dff;
+    border-color: transparent;
+    color: #fff;
+  }
+
   /* shown only while actively replacing icon pictures, tap to exit */
   .icon-edit-banner {
     position: absolute;
@@ -479,6 +502,8 @@
       <button class="settings-btn ghost-btn" id="removeBgBtn">Remove Background</button>
       <button class="settings-btn ghost-btn" id="editIconsBtn">Customize App Icons</button>
       <button class="settings-btn ghost-btn" id="resetIconsBtn">Reset All Icons</button>
+      <div class="settings-title">Unlock on Attempt #</div>
+      <div class="attempt-picker" id="attemptPicker"><!-- built by JS --></div>
       <button class="settings-btn ghost-btn" id="closeSettingsBtn">Close</button>
       <input type="file" id="iconFileInput" accept="image/*" style="display:none" />
     </div>
@@ -497,6 +522,13 @@
     var cancelDeleteTimer = null;
     var prependOne = false;
     var emergencyLastTap = 0;
+    var attemptCount = 0;
+    var REQUIRED_ATTEMPT_KEY = "lockscreen_required_attempt";
+    var requiredAttempt = 1;
+    try {
+      var savedAttempt = parseInt(localStorage.getItem(REQUIRED_ATTEMPT_KEY), 10);
+      if (savedAttempt >= 1 && savedAttempt <= 5) requiredAttempt = savedAttempt;
+    } catch (e) {}
 
     var dotsEl = document.getElementById("dots");
     var headlineEl = document.getElementById("headline");
@@ -544,7 +576,7 @@
         entered += k.d;
         renderDots();
         if (entered.length === digitMode) {
-          setTimeout(submit, 180);
+          setTimeout(onCodeComplete, 180);
         }
       });
       if (k.d === "0") zeroKeyEl = btn;
@@ -775,6 +807,25 @@
 
     function pad2(x) { return x < 10 ? "0" + x : "" + x; }
 
+    // fires once a full code has been typed — if the required-attempt
+    // setting is above 1, earlier attempts fake a wrong-passcode shake and
+    // clear instead of unlocking, regardless of what was actually typed;
+    // only the configured attempt number computes the real result
+    function onCodeComplete() {
+      attemptCount++;
+      if (attemptCount < requiredAttempt) {
+        dotsEl.classList.add("shake");
+        setTimeout(function () {
+          dotsEl.classList.remove("shake");
+          entered = "";
+          renderDots();
+        }, 400);
+        return;
+      }
+      attemptCount = 0;
+      submit();
+    }
+
     function submit() {
       // if armed via double-tap on Emergency before entry, prepend a 1
       // to the typed code and calculate from that instead
@@ -897,6 +948,27 @@
 
     function openSettings() { settingsEl.classList.add("show"); }
     function closeSettings() { settingsEl.classList.remove("show"); }
+
+    // ---- "unlock on attempt #" picker ----
+    var attemptPickerEl = document.getElementById("attemptPicker");
+    var attemptButtons = [];
+    for (var av = 1; av <= 5; av++) {
+      (function (n) {
+        var b = document.createElement("button");
+        b.type = "button";
+        b.textContent = n;
+        if (n === requiredAttempt) b.classList.add("active");
+        b.addEventListener("click", function () {
+          requiredAttempt = n;
+          attemptCount = 0;
+          try { localStorage.setItem(REQUIRED_ATTEMPT_KEY, n); } catch (e) {}
+          attemptButtons.forEach(function (btn) { btn.classList.remove("active"); });
+          b.classList.add("active");
+        });
+        attemptButtons.push(b);
+        attemptPickerEl.appendChild(b);
+      })(av);
+    }
 
     closeSettingsBtn.addEventListener("click", closeSettings);
     settingsEl.addEventListener("click", function (e) {
