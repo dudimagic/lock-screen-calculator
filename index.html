@@ -266,8 +266,8 @@
      via negative offsets) isn't clipped by the face's own rounded overflow */
   .app-icon {
     position: relative;
-    width: 58px;
-    height: 58px;
+    width: 66px;
+    height: 66px;
   }
   .app-icon-face {
     position: relative;
@@ -297,24 +297,6 @@
     text-align: center;
   }
   .app.mail-app { cursor: pointer; }
-
-  /* 2x2 analog clock widget — stretched to fill its spanned cell rather than
-     relying on aspect-ratio, since the base .app-icon has a fixed height
-     that aspect-ratio can't override */
-  .app.widget {
-    grid-column: span 2;
-    grid-row: span 2;
-    align-self: stretch;
-    justify-self: stretch;
-  }
-  .app.widget .app-icon {
-    width: 100%;
-    height: 100%;
-    min-height: 128px;
-    flex: 1 1 auto;
-  }
-  .app.widget .app-icon-face { border-radius: 26px; }
-  .app.widget .app-icon svg { width: 92%; height: 92%; }
 
   .page-dots {
     flex: 0 0 auto;
@@ -368,7 +350,7 @@
     align-items: center;
     direction: ltr;
   }
-  .dock .app-icon { width: 56px; height: 56px; }
+  .dock .app-icon { width: 62px; height: 62px; }
 
   /* background settings sheet */
   .settings {
@@ -604,6 +586,10 @@
     var ICON_CONTACTS = '<circle cx="12" cy="8.2" r="4" fill="#e5e5ea"/><path d="M4 20c0-4.4 3.6-7 8-7s8 2.6 8 7" fill="none" stroke="#e5e5ea" stroke-width="1.9" stroke-linecap="round"/>';
     var ICON_FILES = '<path d="M3 7.5a2 2 0 012-2h4.2l1.6 2H19a2 2 0 012 2v7.5a2 2 0 01-2 2H5a2 2 0 01-2-2V7.5z" fill="#eaf2ff"/><path d="M3 9.5h18v7.5a2 2 0 01-2 2H5a2 2 0 01-2-2z" fill="#ffffff"/>';
     var ICON_MAIL = '<rect x="2.3" y="5.3" width="19.4" height="13.4" rx="2.8" fill="#fff"/><path d="M2.3 7l9.7 7 9.7-7" stroke="#bcd3fb" stroke-width="4.6" fill="none" opacity="0.8"/><path d="M2.3 6.8l9.7 7.2 9.7-7.2" stroke="#2f6fed" stroke-width="1.7" fill="none" stroke-linecap="round" stroke-linejoin="round"/>';
+    var ICON_PODCASTS = '<circle cx="12" cy="12" r="9.5" fill="#fff" opacity="0.12"/><circle cx="12" cy="12" r="6.6" fill="none" stroke="#fff" stroke-width="1.6"/><circle cx="12" cy="12" r="2.7" fill="#fff"/>';
+    var ICON_STOCKS = '<polyline points="3,17 8,12.5 11,15.2 15,8.5 21,4" fill="none" stroke="#30d158" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><polyline points="16,4 21,4 21,9" fill="none" stroke="#30d158" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>';
+    var ICON_COMPASS = '<circle cx="12" cy="12" r="8.6" fill="none" stroke="#fff" stroke-width="1.3"/><polygon points="12,5.2 14,12 12,18.8 10,12" fill="#ff9500"/><circle cx="12" cy="12" r="1.2" fill="#fff"/>';
+    var ICON_CALC = '<rect x="6" y="4.5" width="12" height="4" rx="1" fill="#141416"/><circle cx="8" cy="12" r="1.35" fill="#ff9f0a"/><circle cx="12" cy="12" r="1.35" fill="#3a3a3c"/><circle cx="16" cy="12" r="1.35" fill="#3a3a3c"/><circle cx="8" cy="16.4" r="1.35" fill="#3a3a3c"/><circle cx="12" cy="16.4" r="1.35" fill="#3a3a3c"/><circle cx="16" cy="16.4" r="1.35" fill="#3a3a3c"/>';
 
     var gridApps = [
       { id: "calendar", label: "יומן", bg: ["#ffffff", "#f2f2f2", "#e2e2e2"], svg: ICON_CALENDAR },
@@ -611,7 +597,10 @@
       { id: "photos", label: "תמונות", bg: ["#ffffff", "#f7f7f7", "#e9e9e9"], svg: ICON_PHOTOS },
       { id: "maps", label: "מפות", bg: ["#4cd671", "#2fb156", "#187f39"], svg: ICON_MAPS },
       { id: "weather", label: "מזג אוויר", bg: ["#5aa8f0", "#2f7fe0", "#124fae"], svg: ICON_WEATHER },
-      { id: "clock", label: "שעון", isWidget: true },
+      { id: "podcasts", label: "פודקאסטים", bg: ["#b968e0", "#8e44c9", "#5e2a8f"], svg: ICON_PODCASTS },
+      { id: "stocks", label: "מניות", bg: ["#3c3c3e", "#232325", "#0e0e10"], svg: ICON_STOCKS },
+      { id: "compass", label: "מצפן", bg: ["#3c3c3e", "#232325", "#0e0e10"], svg: ICON_COMPASS },
+      { id: "calculator", label: "מחשבון", bg: ["#a8a8ad", "#8e8e93", "#5f5f63"], svg: ICON_CALC },
       { id: "notes", label: "פתקים", bg: ["#ffe27a", "#ffcc33", "#e8a300"], svg: ICON_NOTES },
       { id: "reminders", label: "תזכורות", bg: ["#ffffff", "#f5f5f5", "#e6e6e6"], svg: ICON_REMINDERS },
       { id: "appstore", label: "App Store", bg: ["#3aa0ff", "#0a6ee8", "#0048ad"], svg: ICON_APPSTORE },
@@ -677,58 +666,7 @@
       }
     }
 
-    function buildClockWidget() {
-      var wrap = document.createElement("div");
-      wrap.className = "app widget";
-      var icon = document.createElement("div");
-      icon.className = "app-icon";
-      var face = document.createElement("div");
-      face.className = "app-icon-face";
-      var defaultBg = bgGradient(["#ffffff", "#f7f7f7", "#eaeaea"]);
-      face.style.background = defaultBg;
-      iconDefaultBg.clock = defaultBg;
-      var nums = "";
-      for (var i = 1; i <= 12; i++) {
-        var ang = (i * 30 - 90) * Math.PI / 180;
-        var x = 50 + 37 * Math.cos(ang);
-        var y = 50 + 37 * Math.sin(ang);
-        nums += '<text x="' + x.toFixed(1) + '" y="' + (y + 3.4).toFixed(1) + '" font-size="8.5" font-weight="600" text-anchor="middle" fill="#111">' + i + "</text>";
-      }
-      face.innerHTML = '<svg viewBox="0 0 100 100">' +
-        '<circle cx="50" cy="50" r="47" fill="none" stroke="#ddd" stroke-width="1"/>' +
-        nums +
-        '<line id="clockHour" x1="50" y1="50" x2="50" y2="30" stroke="#111" stroke-width="4.5" stroke-linecap="round"/>' +
-        '<line id="clockMin" x1="50" y1="50" x2="50" y2="18" stroke="#111" stroke-width="3.2" stroke-linecap="round"/>' +
-        '<line id="clockSec" x1="50" y1="56" x2="50" y2="14" stroke="#ff9500" stroke-width="1.4" stroke-linecap="round"/>' +
-        '<circle cx="50" cy="50" r="3" fill="#ff9500"/>' +
-        "</svg>";
-      icon.appendChild(face);
-      var label = document.createElement("div");
-      label.className = "app-label";
-      label.textContent = "שעון";
-      wrap.appendChild(icon);
-      wrap.appendChild(label);
-      iconFaceEls.clock = face;
-      iconSvgEls.clock = face.querySelector("svg");
-      wrap.addEventListener("click", function () { onAppTapped("clock", false); });
-      return wrap;
-    }
-
-    function updateClockWidget() {
-      var now = new Date();
-      var h = now.getHours() % 12;
-      var m = now.getMinutes();
-      var s = now.getSeconds();
-      var hourEl = document.getElementById("clockHour");
-      var minEl = document.getElementById("clockMin");
-      var secEl = document.getElementById("clockSec");
-      if (hourEl) hourEl.setAttribute("transform", "rotate(" + ((h + m / 60) * 30) + " 50 50)");
-      if (minEl) minEl.setAttribute("transform", "rotate(" + ((m + s / 60) * 6) + " 50 50)");
-      if (secEl) secEl.setAttribute("transform", "rotate(" + (s * 6) + " 50 50)");
-    }
-
     function buildApp(a) {
-      if (a.isWidget) return buildClockWidget();
       var wrap = document.createElement("div");
       wrap.className = "app" + (a.isMail ? " mail-app" : "");
       var icon = document.createElement("div");
@@ -774,9 +712,6 @@
     var todayNow = new Date();
     if (calDayEl) calDayEl.textContent = todayNow.getDate();
     if (calWeekdayEl) calWeekdayEl.textContent = heDayAbbr[todayNow.getDay()];
-
-    updateClockWidget();
-    setInterval(updateClockWidget, 1000);
 
     var pageDotsEl = document.getElementById("pageDots");
     for (var pd = 0; pd < 9; pd++) {
