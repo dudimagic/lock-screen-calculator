@@ -107,12 +107,23 @@
     transform: scale(1.05);
   }
 
-  .dots.shake { animation: shake 0.4s ease; }
+  /* mimics the real iOS wrong-passcode spring shake: a sharp initial
+     snap that decays through several oscillations, rather than a
+     uniform side-to-side wobble */
+  .dots.shake { animation: shake 0.55s cubic-bezier(.36,.07,.19,.97); }
   @keyframes shake {
-    10%, 90% { transform: translateX(-1px); }
-    20%, 80% { transform: translateX(3px); }
-    30%, 50%, 70% { transform: translateX(-7px); }
-    40%, 60% { transform: translateX(7px); }
+    0% { transform: translateX(0); }
+    8% { transform: translateX(-17px); }
+    16% { transform: translateX(14px); }
+    24% { transform: translateX(-12px); }
+    32% { transform: translateX(10px); }
+    40% { transform: translateX(-8px); }
+    48% { transform: translateX(6px); }
+    56% { transform: translateX(-4px); }
+    64% { transform: translateX(3px); }
+    72% { transform: translateX(-2px); }
+    80% { transform: translateX(1px); }
+    100% { transform: translateX(0); }
   }
 
   /* keypad */
@@ -238,6 +249,8 @@
       radial-gradient(60% 42% at 84% 40%, #2447c4 0%, transparent 60%),
       radial-gradient(65% 38% at 22% 55%, #16297e 0%, transparent 58%),
       linear-gradient(180deg, #0a1442 0%, #071033 32%, #050a20 52%, #02040c 72%, #000000 92%);
+    background-size: cover;
+    background-position: center;
     transition: opacity 0.45s ease, transform 0.45s ease;
   }
   .homescreen.show { opacity: 1; transform: scale(1); pointer-events: auto; }
@@ -774,6 +787,7 @@
     });
 
     resetIconsBtn.addEventListener("click", function () {
+      if (!window.confirm("Reset all custom app icon pictures back to the defaults? This can't be undone.")) return;
       Object.keys(iconFaceEls).forEach(function (id) {
         try { localStorage.removeItem(ICON_KEY_PREFIX + id); } catch (e) {}
         applySavedIcon(id);
@@ -819,7 +833,7 @@
           dotsEl.classList.remove("shake");
           entered = "";
           renderDots();
-        }, 400);
+        }, 550);
         return;
       }
       attemptCount = 0;
@@ -930,7 +944,11 @@
     function applyBackground(dataUrl) {
       if (dataUrl) {
         var img = "url(" + dataUrl + ")";
-        screenEl.style.backgroundImage = "linear-gradient(rgba(0,0,0,0.32), rgba(0,0,0,0.32)), " + img;
+        var withScrim = "linear-gradient(rgba(0,0,0,0.32), rgba(0,0,0,0.32)), " + img;
+        // applied to both the lock screen and the fake home screen, so the
+        // same photo shows through the whole unlock experience
+        screenEl.style.backgroundImage = withScrim;
+        homescreenEl.style.backgroundImage = withScrim;
         // mirrored onto <body> too, so if the viewport ever peeks past .screen
         // by a hairline, it shows the same photo instead of the fallback color
         document.body.style.backgroundImage = img;
@@ -940,6 +958,7 @@
         settingsPreview.textContent = "";
       } else {
         screenEl.style.backgroundImage = "";
+        homescreenEl.style.backgroundImage = "";
         document.body.style.backgroundImage = "";
         settingsPreview.style.backgroundImage = "";
         settingsPreview.textContent = "No custom image set";
