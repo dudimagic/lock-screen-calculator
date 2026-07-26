@@ -246,6 +246,7 @@
     flex: 1 1 auto;
     display: grid;
     grid-template-columns: repeat(4, 1fr);
+    grid-auto-flow: row dense;
     justify-items: center;
     align-content: start;
     gap: 22px 8px;
@@ -269,6 +270,7 @@
     height: 58px;
   }
   .app-icon-face {
+    position: relative;
     width: 100%;
     height: 100%;
     border-radius: 15px;
@@ -278,7 +280,15 @@
     justify-content: center;
     box-shadow: 0 2px 6px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.18);
   }
-  .app-icon svg { width: 68%; height: 68%; display: block; }
+  /* glossy top highlight shared by every icon face, for a less flat look */
+  .app-icon-face::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(160deg, rgba(255,255,255,0.32) 0%, rgba(255,255,255,0) 42%, rgba(0,0,0,0.1) 100%);
+    pointer-events: none;
+  }
+  .app-icon svg { width: 68%; height: 68%; display: block; position: relative; }
   .app-label {
     font-size: 11px;
     font-weight: 500;
@@ -287,6 +297,40 @@
     text-align: center;
   }
   .app.mail-app { cursor: pointer; }
+
+  /* 2x2 analog clock widget — stretched to fill its spanned cell rather than
+     relying on aspect-ratio, since the base .app-icon has a fixed height
+     that aspect-ratio can't override */
+  .app.widget {
+    grid-column: span 2;
+    grid-row: span 2;
+    align-self: stretch;
+    justify-self: stretch;
+  }
+  .app.widget .app-icon {
+    width: 100%;
+    height: 100%;
+    min-height: 128px;
+    flex: 1 1 auto;
+  }
+  .app.widget .app-icon-face { border-radius: 26px; }
+  .app.widget .app-icon svg { width: 92%; height: 92%; }
+
+  .page-dots {
+    flex: 0 0 auto;
+    display: flex;
+    justify-content: center;
+    gap: 7px;
+    padding: 10px 0 16px;
+  }
+  .page-dots i {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.4);
+    display: block;
+  }
+  .page-dots i.active { background: rgba(255,255,255,0.95); }
 
   .badge {
     position: absolute;
@@ -415,6 +459,7 @@
 
   <div class="homescreen" id="homescreen">
     <div class="app-grid" id="appGrid"><!-- built by JS --></div>
+    <div class="page-dots" id="pageDots"><!-- built by JS --></div>
     <div class="dock" id="dock"><!-- built by JS --></div>
   </div>
 
@@ -510,13 +555,17 @@
     var ICON_MESSAGES = '<path d="M12 3C6.5 3 2 6.9 2 11.5c0 2.5 1.3 4.7 3.4 6.3-.1.9-.5 2.3-1.4 3.6 1.6-.2 3.4-.9 4.6-1.7 1 .3 2.2.4 3.4.4 5.5 0 10-3.9 10-8.6S17.5 3 12 3z" fill="#fff"/>';
     var ICON_MUSIC = '<circle cx="7" cy="18" r="3" fill="#fff"/><circle cx="18" cy="16" r="3" fill="#fff"/><path d="M10 18V6l11-2v10" stroke="#fff" stroke-width="1.6" fill="none"/>';
     var ICON_SAFARI = '<circle cx="12" cy="12" r="8.5" fill="none" stroke="#0a84ff" stroke-width="1.4"/><polygon points="12,5 14.3,12 12,12" fill="#ff453a"/><polygon points="12,12 9.7,12 12,19" fill="#eee"/>';
-    var ICON_CALENDAR = '<rect x="3" y="4" width="18" height="17" rx="3" fill="#fff"/><rect x="3" y="4" width="18" height="5" rx="3" fill="#ff3b30"/><text x="12" y="17.5" font-size="9.5" font-weight="700" text-anchor="middle" fill="#222" id="calDayNum">•</text>';
-    var ICON_CAMERA = '<rect x="3" y="7" width="18" height="12" rx="2" fill="#fff"/><rect x="8" y="4" width="8" height="3" rx="1" fill="#fff"/><circle cx="12" cy="13" r="3.2" fill="#333"/>';
-    var ICON_PHOTOS = '<circle cx="9" cy="9" r="5" fill="#ffcc00"/><circle cx="15" cy="9" r="5" fill="#34c759"/><circle cx="9" cy="15" r="5" fill="#007aff"/><circle cx="15" cy="15" r="5" fill="#ff3b30"/>';
+    var ICON_CALENDAR = '<rect x="3" y="3" width="18" height="18" rx="4" fill="#fff"/><rect x="3" y="3" width="18" height="7" rx="4" fill="#ff3b30"/><rect x="3" y="7" width="18" height="3" fill="#ff3b30"/><text id="calWeekday" x="12" y="8.2" font-size="4.3" font-weight="700" text-anchor="middle" fill="#fff">יום</text><text id="calDayNum" x="12" y="18.5" font-size="9.5" font-weight="700" text-anchor="middle" fill="#222">•</text>';
+    var ICON_CAMERA = '<rect x="3" y="7" width="18" height="12" rx="2" fill="#fff"/><rect x="8" y="4" width="8" height="3" rx="1" fill="#fff"/><circle cx="12" cy="13" r="3.4" fill="#2c2c2e"/><circle cx="12" cy="13" r="2" fill="#0a84ff"/>';
+    var ICON_PHOTOS = '<g transform="translate(12,12)">' +
+      '<ellipse cx="0" cy="-4.8" rx="3.1" ry="5" fill="#ffcc00"/>' +
+      '<ellipse cx="0" cy="-4.8" rx="3.1" ry="5" fill="#34c759" transform="rotate(90)"/>' +
+      '<ellipse cx="0" cy="-4.8" rx="3.1" ry="5" fill="#007aff" transform="rotate(180)"/>' +
+      '<ellipse cx="0" cy="-4.8" rx="3.1" ry="5" fill="#ff3b30" transform="rotate(270)"/>' +
+      '<circle cx="0" cy="0" r="2.2" fill="#fff"/></g>';
     var ICON_MAPS = '<path d="M12 2C8.1 2 5 5.1 5 9c0 5.3 6.1 12.2 6.4 12.5.3.3.9.3 1.2 0C13 21.2 19 14.3 19 9c0-3.9-3.1-7-7-7z" fill="#fff"/><circle cx="12" cy="9" r="2.6" fill="#1f9c46"/>';
-    var ICON_WEATHER = '<circle cx="16" cy="8" r="4" fill="#ffd60a"/><ellipse cx="10" cy="16" rx="7" ry="4.2" fill="#ffffff"/>';
-    var ICON_CLOCK = '<circle cx="12" cy="12" r="9" fill="none" stroke="#111" stroke-width="1.4"/><line x1="12" y1="12" x2="12" y2="7" stroke="#111" stroke-width="1.6" stroke-linecap="round"/><line x1="12" y1="12" x2="15.2" y2="12" stroke="#111" stroke-width="1.6" stroke-linecap="round"/>';
-    var ICON_NOTES = '<rect x="4" y="3" width="16" height="18" rx="2" fill="#fff"/><line x1="7" y1="8" x2="17" y2="8" stroke="#d8b04a" stroke-width="1.4"/><line x1="7" y1="12" x2="17" y2="12" stroke="#ccc" stroke-width="1.2"/><line x1="7" y1="16" x2="14" y2="16" stroke="#ccc" stroke-width="1.2"/>';
+    var ICON_WEATHER = '<circle cx="16" cy="7.5" r="4.2" fill="#ffd60a"/><ellipse cx="10" cy="16" rx="7.2" ry="4.4" fill="#ffffff"/><ellipse cx="15" cy="15" rx="4" ry="3" fill="#ffffff"/>';
+    var ICON_NOTES = '<rect x="4" y="3" width="16" height="18" rx="2" fill="#fff"/><rect x="4" y="3" width="16" height="4" rx="2" fill="#ffcc33"/><line x1="7" y1="10" x2="17" y2="10" stroke="#ccc" stroke-width="1.2"/><line x1="7" y1="14" x2="17" y2="14" stroke="#ccc" stroke-width="1.2"/><line x1="7" y1="18" x2="14" y2="18" stroke="#ccc" stroke-width="1.2"/>';
     var ICON_REMINDERS = '<rect x="4" y="4" width="16" height="16" rx="3" fill="#fff"/><circle cx="8" cy="9" r="1.6" fill="#ff3b30"/><line x1="11" y1="9" x2="17" y2="9" stroke="#333" stroke-width="1.3"/><circle cx="8" cy="14" r="1.6" fill="#ff9500"/><line x1="11" y1="14" x2="17" y2="14" stroke="#333" stroke-width="1.3"/>';
     var ICON_APPSTORE = '<polygon points="12,3 19,19 5,19" fill="#fff"/>';
     var ICON_SETTINGS = '<path d="M12 8.5a3.5 3.5 0 100 7 3.5 3.5 0 000-7zm8.4 3.5c0-.6-.1-1.1-.2-1.6l2-1.6-2-3.4-2.3.9c-.8-.7-1.8-1.2-2.8-1.5L14.6 2H9.4l-.5 2.8c-1 .3-2 .8-2.8 1.5l-2.3-.9-2 3.4 2 1.6c-.1.5-.2 1-.2 1.6s.1 1.1.2 1.6l-2 1.6 2 3.4 2.3-.9c.8.7 1.8 1.2 2.8 1.5l.5 2.8h5.2l.5-2.8c1-.3 2-.8 2.8-1.5l2.3.9 2-3.4-2-1.6c.1-.5.2-1 .2-1.6z" fill="#fff"/>';
@@ -524,44 +573,94 @@
     var ICON_HEALTH = '<path d="M12 20s-7-4.2-9-8C1.2 8.6 2.8 5 6.3 5c2 0 3.4 1.2 3.9 2.4C10.6 6.2 12 5 14 5c3.5 0 5.1 3.6 3.3 7-2 3.8-9 8-9 8z" fill="#ff3b30"/>';
     var ICON_CONTACTS = '<circle cx="12" cy="8" r="4" fill="#fff"/><path d="M4 20c0-4.4 3.6-7 8-7s8 2.6 8 7" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>';
     var ICON_FILES = '<path d="M3 7a2 2 0 012-2h4.2l1.6 2H19a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" fill="#fff"/>';
-    var ICON_MAIL = '<rect x="3" y="6" width="18" height="12" rx="2" fill="#fff"/><path d="M4 7.5l8 5.5 8-5.5" stroke="#2f6fed" stroke-width="1.4" fill="none"/>';
+    var ICON_MAIL = '<rect x="2.5" y="5.5" width="19" height="13" rx="2.5" fill="#fff"/><path d="M2.5 6.5l9.5 7 9.5-7" stroke="#c9dcfb" stroke-width="4.2" fill="none" opacity="0.7"/><path d="M2.5 6.5l9.5 7 9.5-7" stroke="#2f6fed" stroke-width="1.6" fill="none"/>';
 
     var gridApps = [
-      { label: "יומן", bg: ["#ffffff", "#dcdcdc"], svg: ICON_CALENDAR },
-      { label: "מצלמה", bg: ["#3a3a3c", "#1c1c1e"], svg: ICON_CAMERA },
-      { label: "תמונות", bg: ["#ffffff", "#eeeeee"], svg: ICON_PHOTOS },
-      { label: "מפות", bg: ["#34c759", "#1f9c46"], svg: ICON_MAPS },
-      { label: "מזג אוויר", bg: ["#2f8fe0", "#1462c9"], svg: ICON_WEATHER },
-      { label: "שעון", bg: ["#ffffff", "#eeeeee"], svg: ICON_CLOCK },
-      { label: "פתקים", bg: ["#ffd54f", "#ffb300"], svg: ICON_NOTES },
-      { label: "תזכורות", bg: ["#ffffff", "#eeeeee"], svg: ICON_REMINDERS },
-      { label: "App Store", bg: ["#0a84ff", "#0060df"], svg: ICON_APPSTORE },
-      { label: "הגדרות", bg: ["#8e8e93", "#636366"], svg: ICON_SETTINGS },
-      { label: "Wallet", bg: ["#2c2c2e", "#151517"], svg: ICON_WALLET },
-      { label: "בריאות", bg: ["#ffffff", "#eeeeee"], svg: ICON_HEALTH },
-      { label: "FaceTime", bg: ["#34c759", "#1f9c46"], svg: ICON_CAMERA },
-      { label: "אנשי קשר", bg: ["#8e8e93", "#636366"], svg: ICON_CONTACTS },
-      { label: "קבצים", bg: ["#0a84ff", "#0060df"], svg: ICON_FILES },
-      { label: "Mail", bg: ["#2f8fe0", "#0a5cc9"], svg: ICON_MAIL, isMail: true }
+      { label: "יומן", bg: ["#ffffff", "#f2f2f2", "#e2e2e2"], svg: ICON_CALENDAR },
+      { label: "מצלמה", bg: ["#4a4a4c", "#2c2c2e", "#141416"], svg: ICON_CAMERA },
+      { label: "תמונות", bg: ["#ffffff", "#f7f7f7", "#e9e9e9"], svg: ICON_PHOTOS },
+      { label: "מפות", bg: ["#4cd671", "#2fb156", "#187f39"], svg: ICON_MAPS },
+      { label: "מזג אוויר", bg: ["#5aa8f0", "#2f7fe0", "#124fae"], svg: ICON_WEATHER },
+      { label: "שעון", isWidget: true },
+      { label: "פתקים", bg: ["#ffe27a", "#ffcc33", "#e8a300"], svg: ICON_NOTES },
+      { label: "תזכורות", bg: ["#ffffff", "#f5f5f5", "#e6e6e6"], svg: ICON_REMINDERS },
+      { label: "App Store", bg: ["#3aa0ff", "#0a6ee8", "#0048ad"], svg: ICON_APPSTORE },
+      { label: "הגדרות", bg: ["#a8a8ad", "#8e8e93", "#5f5f63"], svg: ICON_SETTINGS },
+      { label: "Wallet", bg: ["#3c3c3e", "#232325", "#0e0e10"], svg: ICON_WALLET },
+      { label: "בריאות", bg: ["#ffffff", "#f7f7f7", "#eeeeee"], svg: ICON_HEALTH },
+      { label: "FaceTime", bg: ["#4cd671", "#2fb156", "#187f39"], svg: ICON_CAMERA },
+      { label: "אנשי קשר", bg: ["#a8a8ad", "#8e8e93", "#5f5f63"], svg: ICON_CONTACTS },
+      { label: "קבצים", bg: ["#3aa0ff", "#0a6ee8", "#0048ad"], svg: ICON_FILES },
+      { label: "Mail", bg: ["#5db3ff", "#1f7bf0", "#0a4fc0"], svg: ICON_MAIL, isMail: true }
     ];
 
     var dockApps = [
-      { label: "טלפון", bg: ["#34c759", "#1f9c46"], svg: ICON_PHONE },
-      { label: "ספארי", bg: ["#ffffff", "#eeeeee"], svg: ICON_SAFARI },
-      { label: "הודעות", bg: ["#34c759", "#1f9c46"], svg: ICON_MESSAGES },
-      { label: "מוזיקה", bg: ["#fc3158", "#fa233b"], svg: ICON_MUSIC }
+      { label: "טלפון", bg: ["#4cd671", "#2fb156", "#187f39"], svg: ICON_PHONE },
+      { label: "ספארי", bg: ["#ffffff", "#f5f5f5", "#e6e6e6"], svg: ICON_SAFARI },
+      { label: "הודעות", bg: ["#4cd671", "#2fb156", "#187f39"], svg: ICON_MESSAGES },
+      { label: "מוזיקה", bg: ["#ff6688", "#fc3158", "#c81030"], svg: ICON_MUSIC }
     ];
 
     var mailBadgeEl = null;
 
+    function bgGradient(bg) {
+      return "linear-gradient(160deg, " + bg[0] + " 0%, " + bg[1] + " 55%, " + bg[2] + " 100%)";
+    }
+
+    function buildClockWidget() {
+      var wrap = document.createElement("div");
+      wrap.className = "app widget";
+      var icon = document.createElement("div");
+      icon.className = "app-icon";
+      var face = document.createElement("div");
+      face.className = "app-icon-face";
+      face.style.background = bgGradient(["#ffffff", "#f7f7f7", "#eaeaea"]);
+      var nums = "";
+      for (var i = 1; i <= 12; i++) {
+        var ang = (i * 30 - 90) * Math.PI / 180;
+        var x = 50 + 37 * Math.cos(ang);
+        var y = 50 + 37 * Math.sin(ang);
+        nums += '<text x="' + x.toFixed(1) + '" y="' + (y + 3.4).toFixed(1) + '" font-size="8.5" font-weight="600" text-anchor="middle" fill="#111">' + i + "</text>";
+      }
+      face.innerHTML = '<svg viewBox="0 0 100 100">' +
+        '<circle cx="50" cy="50" r="47" fill="none" stroke="#ddd" stroke-width="1"/>' +
+        nums +
+        '<line id="clockHour" x1="50" y1="50" x2="50" y2="30" stroke="#111" stroke-width="4.5" stroke-linecap="round"/>' +
+        '<line id="clockMin" x1="50" y1="50" x2="50" y2="18" stroke="#111" stroke-width="3.2" stroke-linecap="round"/>' +
+        '<line id="clockSec" x1="50" y1="56" x2="50" y2="14" stroke="#ff9500" stroke-width="1.4" stroke-linecap="round"/>' +
+        '<circle cx="50" cy="50" r="3" fill="#ff9500"/>' +
+        "</svg>";
+      icon.appendChild(face);
+      var label = document.createElement("div");
+      label.className = "app-label";
+      label.textContent = "שעון";
+      wrap.appendChild(icon);
+      wrap.appendChild(label);
+      return wrap;
+    }
+
+    function updateClockWidget() {
+      var now = new Date();
+      var h = now.getHours() % 12;
+      var m = now.getMinutes();
+      var s = now.getSeconds();
+      var hourEl = document.getElementById("clockHour");
+      var minEl = document.getElementById("clockMin");
+      var secEl = document.getElementById("clockSec");
+      if (hourEl) hourEl.setAttribute("transform", "rotate(" + ((h + m / 60) * 30) + " 50 50)");
+      if (minEl) minEl.setAttribute("transform", "rotate(" + ((m + s / 60) * 6) + " 50 50)");
+      if (secEl) secEl.setAttribute("transform", "rotate(" + (s * 6) + " 50 50)");
+    }
+
     function buildApp(a) {
+      if (a.isWidget) return buildClockWidget();
       var wrap = document.createElement("div");
       wrap.className = "app" + (a.isMail ? " mail-app" : "");
       var icon = document.createElement("div");
       icon.className = "app-icon";
       var face = document.createElement("div");
       face.className = "app-icon-face";
-      face.style.background = "linear-gradient(135deg, " + a.bg[0] + ", " + a.bg[1] + ")";
+      face.style.background = bgGradient(a.bg);
       face.innerHTML = '<svg viewBox="0 0 24 24">' + a.svg + "</svg>";
       icon.appendChild(face);
       if (a.isMail) {
@@ -587,8 +686,22 @@
       dockEl.appendChild(app);
     });
 
+    var heDayAbbr = ["יום א'", "יום ב'", "יום ג'", "יום ד'", "יום ה'", "יום ו'", "שבת"];
     var calDayEl = document.getElementById("calDayNum");
-    if (calDayEl) calDayEl.textContent = new Date().getDate();
+    var calWeekdayEl = document.getElementById("calWeekday");
+    var todayNow = new Date();
+    if (calDayEl) calDayEl.textContent = todayNow.getDate();
+    if (calWeekdayEl) calWeekdayEl.textContent = heDayAbbr[todayNow.getDay()];
+
+    updateClockWidget();
+    setInterval(updateClockWidget, 1000);
+
+    var pageDotsEl = document.getElementById("pageDots");
+    for (var pd = 0; pd < 9; pd++) {
+      var dot = document.createElement("i");
+      if (pd === 8) dot.className = "active";
+      pageDotsEl.appendChild(dot);
+    }
 
     // tapping the Mail icon acknowledges the result and re-locks the phone
     var mailAppEl = appGridEl.querySelector(".mail-app");
