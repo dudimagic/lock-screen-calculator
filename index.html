@@ -434,6 +434,30 @@
   .settings-btn:active { background: var(--glass-press); }
   .settings-btn.ghost-btn { background: transparent; color: var(--ink-dim); border-color: transparent; }
 
+  /* shown only while actively replacing icon pictures, tap to exit */
+  .icon-edit-banner {
+    position: absolute;
+    left: 14px;
+    right: 14px;
+    top: calc(env(safe-area-inset-top, 0px) + 10px);
+    z-index: 15;
+    text-align: center;
+    padding: 10px 14px;
+    border-radius: 14px;
+    background: rgba(0,0,0,0.55);
+    border: 1px solid rgba(255,255,255,0.18);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    cursor: pointer;
+  }
+  .icon-edit-banner.show { opacity: 1; pointer-events: auto; }
+
   @media (prefers-reduced-motion: reduce) {
     * { transition-duration: 0.001ms !important; animation-duration: 0.001ms !important; }
   }
@@ -458,6 +482,7 @@
   </div>
 
   <div class="homescreen" id="homescreen">
+    <div class="icon-edit-banner" id="iconEditBanner">Tap an icon to replace its picture · Tap here when done</div>
     <div class="app-grid" id="appGrid"><!-- built by JS --></div>
     <div class="page-dots" id="pageDots"><!-- built by JS --></div>
     <div class="dock" id="dock"><!-- built by JS --></div>
@@ -470,7 +495,10 @@
       <label class="settings-btn" for="bgFileInput">Choose Photo</label>
       <input type="file" id="bgFileInput" accept="image/*" style="display:none" />
       <button class="settings-btn ghost-btn" id="removeBgBtn">Remove Background</button>
+      <button class="settings-btn ghost-btn" id="editIconsBtn">Customize App Icons</button>
+      <button class="settings-btn ghost-btn" id="resetIconsBtn">Reset All Icons</button>
       <button class="settings-btn ghost-btn" id="closeSettingsBtn">Close</button>
+      <input type="file" id="iconFileInput" accept="image/*" style="display:none" />
     </div>
   </div>
 
@@ -578,35 +606,75 @@
     var ICON_MAIL = '<rect x="2.3" y="5.3" width="19.4" height="13.4" rx="2.8" fill="#fff"/><path d="M2.3 7l9.7 7 9.7-7" stroke="#bcd3fb" stroke-width="4.6" fill="none" opacity="0.8"/><path d="M2.3 6.8l9.7 7.2 9.7-7.2" stroke="#2f6fed" stroke-width="1.7" fill="none" stroke-linecap="round" stroke-linejoin="round"/>';
 
     var gridApps = [
-      { label: "יומן", bg: ["#ffffff", "#f2f2f2", "#e2e2e2"], svg: ICON_CALENDAR },
-      { label: "מצלמה", bg: ["#4a4a4c", "#2c2c2e", "#141416"], svg: ICON_CAMERA },
-      { label: "תמונות", bg: ["#ffffff", "#f7f7f7", "#e9e9e9"], svg: ICON_PHOTOS },
-      { label: "מפות", bg: ["#4cd671", "#2fb156", "#187f39"], svg: ICON_MAPS },
-      { label: "מזג אוויר", bg: ["#5aa8f0", "#2f7fe0", "#124fae"], svg: ICON_WEATHER },
-      { label: "שעון", isWidget: true },
-      { label: "פתקים", bg: ["#ffe27a", "#ffcc33", "#e8a300"], svg: ICON_NOTES },
-      { label: "תזכורות", bg: ["#ffffff", "#f5f5f5", "#e6e6e6"], svg: ICON_REMINDERS },
-      { label: "App Store", bg: ["#3aa0ff", "#0a6ee8", "#0048ad"], svg: ICON_APPSTORE },
-      { label: "הגדרות", bg: ["#a8a8ad", "#8e8e93", "#5f5f63"], svg: ICON_SETTINGS },
-      { label: "Wallet", bg: ["#3c3c3e", "#232325", "#0e0e10"], svg: ICON_WALLET },
-      { label: "בריאות", bg: ["#ffffff", "#f7f7f7", "#eeeeee"], svg: ICON_HEALTH },
-      { label: "FaceTime", bg: ["#4cd671", "#2fb156", "#187f39"], svg: ICON_CAMERA },
-      { label: "אנשי קשר", bg: ["#a8a8ad", "#8e8e93", "#5f5f63"], svg: ICON_CONTACTS },
-      { label: "קבצים", bg: ["#3aa0ff", "#0a6ee8", "#0048ad"], svg: ICON_FILES },
-      { label: "Mail", bg: ["#6bc2ff", "#3b82f5", "#7b3fe4"], svg: ICON_MAIL, isMail: true }
+      { id: "calendar", label: "יומן", bg: ["#ffffff", "#f2f2f2", "#e2e2e2"], svg: ICON_CALENDAR },
+      { id: "camera", label: "מצלמה", bg: ["#4a4a4c", "#2c2c2e", "#141416"], svg: ICON_CAMERA },
+      { id: "photos", label: "תמונות", bg: ["#ffffff", "#f7f7f7", "#e9e9e9"], svg: ICON_PHOTOS },
+      { id: "maps", label: "מפות", bg: ["#4cd671", "#2fb156", "#187f39"], svg: ICON_MAPS },
+      { id: "weather", label: "מזג אוויר", bg: ["#5aa8f0", "#2f7fe0", "#124fae"], svg: ICON_WEATHER },
+      { id: "clock", label: "שעון", isWidget: true },
+      { id: "notes", label: "פתקים", bg: ["#ffe27a", "#ffcc33", "#e8a300"], svg: ICON_NOTES },
+      { id: "reminders", label: "תזכורות", bg: ["#ffffff", "#f5f5f5", "#e6e6e6"], svg: ICON_REMINDERS },
+      { id: "appstore", label: "App Store", bg: ["#3aa0ff", "#0a6ee8", "#0048ad"], svg: ICON_APPSTORE },
+      { id: "settings", label: "הגדרות", bg: ["#a8a8ad", "#8e8e93", "#5f5f63"], svg: ICON_SETTINGS },
+      { id: "wallet", label: "Wallet", bg: ["#3c3c3e", "#232325", "#0e0e10"], svg: ICON_WALLET },
+      { id: "health", label: "בריאות", bg: ["#ffffff", "#f7f7f7", "#eeeeee"], svg: ICON_HEALTH },
+      { id: "facetime", label: "FaceTime", bg: ["#4cd671", "#2fb156", "#187f39"], svg: ICON_CAMERA },
+      { id: "contacts", label: "אנשי קשר", bg: ["#a8a8ad", "#8e8e93", "#5f5f63"], svg: ICON_CONTACTS },
+      { id: "files", label: "קבצים", bg: ["#3aa0ff", "#0a6ee8", "#0048ad"], svg: ICON_FILES },
+      { id: "mail", label: "Mail", bg: ["#6bc2ff", "#3b82f5", "#7b3fe4"], svg: ICON_MAIL, isMail: true }
     ];
 
     var dockApps = [
-      { label: "טלפון", bg: ["#4cd671", "#2fb156", "#187f39"], svg: ICON_PHONE },
-      { label: "ספארי", bg: ["#ffffff", "#f5f5f5", "#e6e6e6"], svg: ICON_SAFARI },
-      { label: "הודעות", bg: ["#4cd671", "#2fb156", "#187f39"], svg: ICON_MESSAGES },
-      { label: "מוזיקה", bg: ["#ff6688", "#fc3158", "#c81030"], svg: ICON_MUSIC }
+      { id: "phone", label: "טלפון", bg: ["#4cd671", "#2fb156", "#187f39"], svg: ICON_PHONE },
+      { id: "safari", label: "ספארי", bg: ["#ffffff", "#f5f5f5", "#e6e6e6"], svg: ICON_SAFARI },
+      { id: "messages", label: "הודעות", bg: ["#4cd671", "#2fb156", "#187f39"], svg: ICON_MESSAGES },
+      { id: "music", label: "מוזיקה", bg: ["#ff6688", "#fc3158", "#c81030"], svg: ICON_MUSIC }
     ];
 
     var mailBadgeEl = null;
+    var iconEditMode = false;
+    var pendingIconId = null;
+    var iconFaceEls = {};
+    var iconSvgEls = {};
+    var iconDefaultBg = {};
+    var ICON_KEY_PREFIX = "lockscreen_icon_";
 
     function bgGradient(bg) {
       return "linear-gradient(160deg, " + bg[0] + " 0%, " + bg[1] + " 55%, " + bg[2] + " 100%)";
+    }
+
+    // applies a saved custom icon photo over the default gradient+glyph, if one exists
+    function applySavedIcon(id) {
+      var face = iconFaceEls[id];
+      if (!face) return;
+      var saved = null;
+      try { saved = localStorage.getItem(ICON_KEY_PREFIX + id); } catch (e) {}
+      if (saved) {
+        face.style.backgroundImage = "url(" + saved + ")";
+        face.style.backgroundSize = "cover";
+        face.style.backgroundPosition = "center";
+        if (iconSvgEls[id]) iconSvgEls[id].style.display = "none";
+      } else {
+        face.style.background = iconDefaultBg[id] || "";
+        face.style.backgroundImage = "";
+        if (iconSvgEls[id]) iconSvgEls[id].style.display = "";
+      }
+    }
+
+    function onAppTapped(id, isMail) {
+      if (iconEditMode) {
+        pendingIconId = id;
+        document.getElementById("iconFileInput").click();
+        return;
+      }
+      if (isMail) {
+        homescreenEl.classList.remove("show");
+        setTimeout(function () {
+          entered = "";
+          renderDots();
+          lockbodyEl.classList.remove("hidden");
+        }, 300);
+      }
     }
 
     function buildClockWidget() {
@@ -616,7 +684,9 @@
       icon.className = "app-icon";
       var face = document.createElement("div");
       face.className = "app-icon-face";
-      face.style.background = bgGradient(["#ffffff", "#f7f7f7", "#eaeaea"]);
+      var defaultBg = bgGradient(["#ffffff", "#f7f7f7", "#eaeaea"]);
+      face.style.background = defaultBg;
+      iconDefaultBg.clock = defaultBg;
       var nums = "";
       for (var i = 1; i <= 12; i++) {
         var ang = (i * 30 - 90) * Math.PI / 180;
@@ -638,6 +708,9 @@
       label.textContent = "שעון";
       wrap.appendChild(icon);
       wrap.appendChild(label);
+      iconFaceEls.clock = face;
+      iconSvgEls.clock = face.querySelector("svg");
+      wrap.addEventListener("click", function () { onAppTapped("clock", false); });
       return wrap;
     }
 
@@ -662,7 +735,9 @@
       icon.className = "app-icon";
       var face = document.createElement("div");
       face.className = "app-icon-face";
-      face.style.background = bgGradient(a.bg);
+      var defaultBg = bgGradient(a.bg);
+      face.style.background = defaultBg;
+      iconDefaultBg[a.id] = defaultBg;
       face.innerHTML = '<svg viewBox="0 0 24 24">' + a.svg + "</svg>";
       icon.appendChild(face);
       if (a.isMail) {
@@ -678,6 +753,9 @@
       label.textContent = a.label;
       wrap.appendChild(icon);
       wrap.appendChild(label);
+      iconFaceEls[a.id] = face;
+      iconSvgEls[a.id] = face.querySelector("svg");
+      wrap.addEventListener("click", function () { onAppTapped(a.id, a.isMail); });
       return wrap;
     }
 
@@ -687,6 +765,8 @@
       app.querySelector(".app-label").remove();
       dockEl.appendChild(app);
     });
+
+    Object.keys(iconFaceEls).forEach(applySavedIcon);
 
     var heDayAbbr = ["יום א'", "יום ב'", "יום ג'", "יום ד'", "יום ה'", "יום ו'", "שבת"];
     var calDayEl = document.getElementById("calDayNum");
@@ -705,15 +785,57 @@
       pageDotsEl.appendChild(dot);
     }
 
-    // tapping the Mail icon acknowledges the result and re-locks the phone
-    var mailAppEl = appGridEl.querySelector(".mail-app");
-    mailAppEl.addEventListener("click", function () {
-      homescreenEl.classList.remove("show");
-      setTimeout(function () {
-        entered = "";
-        renderDots();
-        lockbodyEl.classList.remove("hidden");
-      }, 300);
+    // ---- icon edit mode: upload your own photo for any icon (grid, dock, or the clock widget) ----
+    var iconEditBannerEl = document.getElementById("iconEditBanner");
+    var editIconsBtn = document.getElementById("editIconsBtn");
+    var resetIconsBtn = document.getElementById("resetIconsBtn");
+    var iconFileInputEl = document.getElementById("iconFileInput");
+
+    function enterIconEditMode() {
+      iconEditMode = true;
+      iconEditBannerEl.classList.add("show");
+    }
+    function exitIconEditMode() {
+      iconEditMode = false;
+      iconEditBannerEl.classList.remove("show");
+    }
+    iconEditBannerEl.addEventListener("click", exitIconEditMode);
+
+    editIconsBtn.addEventListener("click", function () {
+      closeSettings();
+      enterIconEditMode();
+    });
+
+    resetIconsBtn.addEventListener("click", function () {
+      Object.keys(iconFaceEls).forEach(function (id) {
+        try { localStorage.removeItem(ICON_KEY_PREFIX + id); } catch (e) {}
+        applySavedIcon(id);
+      });
+    });
+
+    iconFileInputEl.addEventListener("change", function (e) {
+      var file = e.target.files && e.target.files[0];
+      iconFileInputEl.value = "";
+      if (!file || !pendingIconId) return;
+      var targetId = pendingIconId;
+      var reader = new FileReader();
+      reader.onload = function (ev) {
+        var img = new Image();
+        img.onload = function () {
+          var maxDim = 260;
+          var scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+          var canvas = document.createElement("canvas");
+          canvas.width = Math.round(img.width * scale);
+          canvas.height = Math.round(img.height * scale);
+          var ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          var out = canvas.toDataURL("image/jpeg", 0.85);
+          try { localStorage.setItem(ICON_KEY_PREFIX + targetId, out); } catch (err) {}
+          applySavedIcon(targetId);
+        };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
     });
 
     function pad2(x) { return x < 10 ? "0" + x : "" + x; }
