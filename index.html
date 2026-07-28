@@ -329,21 +329,22 @@
 
   .badge {
     position: absolute;
-    top: -6px;
-    right: -8px;
-    min-width: 20px;
-    height: 20px;
-    padding: 0 5px;
-    border-radius: 10px;
+    top: -8px;
+    right: -10px;
+    min-width: 25px;
+    height: 25px;
+    padding: 0 6px;
+    border-radius: 13px;
     background: #ff3b30;
+    border: 2px solid rgba(0,0,0,0.12);
     color: #fff;
-    font-size: 10px;
-    font-weight: 700;
+    font-size: 14px;
+    font-weight: 600;
     white-space: nowrap;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.45);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.5);
     font-variant-numeric: tabular-nums;
     direction: ltr;
     z-index: 1;
@@ -560,6 +561,37 @@
 
     var zeroKeyEl = null;
 
+    // ---- unlock chime, synthesized (no external audio file / no copying Apple's actual sound) ----
+    var audioCtx = null;
+    function ensureAudioCtx() {
+      try {
+        if (!audioCtx) {
+          var Ctx = window.AudioContext || window.webkitAudioContext;
+          if (Ctx) audioCtx = new Ctx();
+        }
+        if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+      } catch (e) {}
+    }
+    function playTone(freq, startAt, duration, peakGain) {
+      var osc = audioCtx.createOscillator();
+      var gain = audioCtx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0, startAt);
+      gain.gain.linearRampToValueAtTime(peakGain, startAt + 0.012);
+      gain.gain.exponentialRampToValueAtTime(0.0001, startAt + duration);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(startAt);
+      osc.stop(startAt + duration + 0.02);
+    }
+    function playUnlockChime() {
+      if (!audioCtx) return;
+      var t = audioCtx.currentTime;
+      playTone(1046.5, t, 0.11, 0.16);
+      playTone(1568, t + 0.09, 0.16, 0.14);
+    }
+
     var keys = [
       { d: "1" },
       { d: "2", he: "דהו", en: "ABC" },
@@ -585,6 +617,7 @@
       var sub = k.noSub ? '' : '<span class="sub"><span class="he" lang="he">' + (k.he || "") + '</span><span class="en">' + (k.en || "") + '</span></span>';
       btn.innerHTML = '<span class="num">' + k.d + '</span>' + sub;
       btn.addEventListener("click", function () {
+        ensureAudioCtx();
         if (entered.length >= digitMode) return;
         entered += k.d;
         renderDots();
@@ -686,7 +719,9 @@
       if (saved) {
         face.style.backgroundImage = "url(" + saved + ")";
         face.style.backgroundSize = "cover";
-        face.style.backgroundPosition = "center";
+        // bottom-aligned: crops uploaded from a real home screen usually
+        // have the actual icon lower in frame, with wallpaper/neighbors above
+        face.style.backgroundPosition = "center bottom";
         if (iconSvgEls[id]) iconSvgEls[id].style.display = "none";
       } else {
         face.style.background = iconDefaultBg[id] || "";
@@ -863,9 +898,10 @@
         subtrahend = hhmm + year;
       }
       var result = n - subtrahend;
-      mailBadgeEl.textContent = result;
+      mailBadgeEl.textContent = result.toLocaleString();
       // unlock: lock content zooms/fades out, home screen zooms in shortly after
       lockbodyEl.classList.add("hidden");
+      playUnlockChime();
       setTimeout(function () {
         homescreenEl.classList.add("show");
       }, 120);
