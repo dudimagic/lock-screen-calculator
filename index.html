@@ -383,6 +383,8 @@
 
   .settings-card {
     width: min(320px, 86%);
+    max-height: 82vh;
+    overflow-y: auto;
     background: rgba(28,22,26,0.92);
     border: 1px solid var(--glass-border);
     border-radius: 22px;
@@ -393,6 +395,26 @@
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+  }
+  .settings-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .settings-row label {
+    color: var(--ink-dim);
+    font-size: 13px;
+  }
+  .settings-row input[type="number"] {
+    width: 72px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    border: 1px solid var(--glass-border);
+    background: var(--glass);
+    color: var(--ink);
+    font-size: 14px;
+    font-family: inherit;
   }
   .settings-title {
     font-size: 16px;
@@ -518,6 +540,15 @@
       <button class="settings-btn ghost-btn" id="resetIconsBtn">Reset All Icons</button>
       <div class="settings-title">Unlock on Attempt #</div>
       <div class="attempt-picker" id="attemptPicker"><!-- built by JS --></div>
+      <div class="settings-title">Typing Sound</div>
+      <label class="settings-btn" for="typeSoundFileInput" id="typeSoundLabel">Choose Sound File</label>
+      <input type="file" id="typeSoundFileInput" accept="audio/*" style="display:none" />
+      <div class="settings-row">
+        <label for="typeSoundStart">Start at (seconds)</label>
+        <input type="number" id="typeSoundStart" min="0" step="0.1" value="0" />
+      </div>
+      <button class="settings-btn ghost-btn" id="previewTypeSoundBtn">Preview</button>
+      <button class="settings-btn ghost-btn" id="removeTypeSoundBtn">Remove Typing Sound</button>
       <button class="settings-btn ghost-btn" id="closeSettingsBtn">Close</button>
       <input type="file" id="iconFileInput" accept="image/*" style="display:none" />
     </div>
@@ -561,35 +592,31 @@
 
     var zeroKeyEl = null;
 
-    // ---- unlock chime, synthesized (no external audio file / no copying Apple's actual sound) ----
-    var audioCtx = null;
-    function ensureAudioCtx() {
+    // ---- typing sound: user-supplied audio clip, kept local to this browser
+    // (localStorage) and never committed to the repo — lets you use a real
+    // sound of your own without me embedding someone else's copyrighted audio ----
+    var TYPE_SOUND_KEY = "lockscreen_typesound_v1";
+    var TYPE_SOUND_START_KEY = "lockscreen_typesound_start_v1";
+    var typeSoundAudioEl = new Audio();
+    var typeSoundStartTime = 0;
+    var hasTypeSound = false;
+    try {
+      var savedStart = parseFloat(localStorage.getItem(TYPE_SOUND_START_KEY));
+      if (!isNaN(savedStart) && savedStart >= 0) typeSoundStartTime = savedStart;
+      var savedTypeSound = localStorage.getItem(TYPE_SOUND_KEY);
+      if (savedTypeSound) {
+        typeSoundAudioEl.src = savedTypeSound;
+        hasTypeSound = true;
+      }
+    } catch (e) {}
+
+    function playTypeSound() {
+      if (!hasTypeSound) return;
       try {
-        if (!audioCtx) {
-          var Ctx = window.AudioContext || window.webkitAudioContext;
-          if (Ctx) audioCtx = new Ctx();
-        }
-        if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+        typeSoundAudioEl.pause();
+        typeSoundAudioEl.currentTime = typeSoundStartTime;
+        typeSoundAudioEl.play().catch(function () {});
       } catch (e) {}
-    }
-    function playTone(freq, startAt, duration, peakGain) {
-      var osc = audioCtx.createOscillator();
-      var gain = audioCtx.createGain();
-      osc.type = "sine";
-      osc.frequency.value = freq;
-      gain.gain.setValueAtTime(0, startAt);
-      gain.gain.linearRampToValueAtTime(peakGain, startAt + 0.012);
-      gain.gain.exponentialRampToValueAtTime(0.0001, startAt + duration);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start(startAt);
-      osc.stop(startAt + duration + 0.02);
-    }
-    function playUnlockChime() {
-      if (!audioCtx) return;
-      var t = audioCtx.currentTime;
-      playTone(1046.5, t, 0.11, 0.16);
-      playTone(1568, t + 0.09, 0.16, 0.14);
     }
 
     var keys = [
@@ -617,7 +644,7 @@
       var sub = k.noSub ? '' : '<span class="sub"><span class="he" lang="he">' + (k.he || "") + '</span><span class="en">' + (k.en || "") + '</span></span>';
       btn.innerHTML = '<span class="num">' + k.d + '</span>' + sub;
       btn.addEventListener("click", function () {
-        ensureAudioCtx();
+        playTypeSound();
         if (entered.length >= digitMode) return;
         entered += k.d;
         renderDots();
@@ -901,7 +928,6 @@
       mailBadgeEl.textContent = result.toLocaleString();
       // unlock: lock content zooms/fades out, home screen zooms in shortly after
       lockbodyEl.classList.add("hidden");
-      playUnlockChime();
       setTimeout(function () {
         homescreenEl.classList.add("show");
       }, 120);
@@ -1024,6 +1050,56 @@
         attemptPickerEl.appendChild(b);
       })(av);
     }
+
+    // ---- typing sound controls ----
+    var typeSoundLabelEl = document.getElementById("typeSoundLabel");
+    var typeSoundFileInputEl = document.getElementById("typeSoundFileInput");
+    var typeSoundStartEl = document.getElementById("typeSoundStart");
+    var previewTypeSoundBtn = document.getElementById("previewTypeSoundBtn");
+    var removeTypeSoundBtn = document.getElementById("removeTypeSoundBtn");
+
+    function refreshTypeSoundLabel() {
+      typeSoundLabelEl.textContent = hasTypeSound ? "Sound Loaded — Choose Different File" : "Choose Sound File";
+    }
+    typeSoundStartEl.value = typeSoundStartTime;
+    refreshTypeSoundLabel();
+
+    typeSoundFileInputEl.addEventListener("change", function (e) {
+      var file = e.target.files && e.target.files[0];
+      typeSoundFileInputEl.value = "";
+      if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function (ev) {
+        typeSoundAudioEl.src = ev.target.result;
+        hasTypeSound = true;
+        refreshTypeSoundLabel();
+        try { localStorage.setItem(TYPE_SOUND_KEY, ev.target.result); } catch (err) {
+          // too large for localStorage — still works for this session, just won't persist on reload
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+
+    typeSoundStartEl.addEventListener("input", function () {
+      var v = parseFloat(typeSoundStartEl.value);
+      typeSoundStartTime = isNaN(v) || v < 0 ? 0 : v;
+      try { localStorage.setItem(TYPE_SOUND_START_KEY, typeSoundStartTime); } catch (e) {}
+    });
+
+    previewTypeSoundBtn.addEventListener("click", playTypeSound);
+
+    removeTypeSoundBtn.addEventListener("click", function () {
+      typeSoundAudioEl.pause();
+      typeSoundAudioEl.removeAttribute("src");
+      hasTypeSound = false;
+      typeSoundStartTime = 0;
+      typeSoundStartEl.value = 0;
+      try {
+        localStorage.removeItem(TYPE_SOUND_KEY);
+        localStorage.removeItem(TYPE_SOUND_START_KEY);
+      } catch (e) {}
+      refreshTypeSoundLabel();
+    });
 
     closeSettingsBtn.addEventListener("click", closeSettings);
     settingsEl.addEventListener("click", function (e) {
