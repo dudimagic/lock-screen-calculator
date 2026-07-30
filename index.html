@@ -34,31 +34,18 @@
     inset: 0;
     overflow: hidden;
     touch-action: none;
-    background: linear-gradient(180deg, #ffb37a 0%, #f2795f 18%, #c85a86 34%, #6f3f88 52%, #2c1e4d 68%, #0d0a1c 84%, #000000 96%);
+    background:
+      radial-gradient(55% 32% at 72% 5%, #6ea8ff 0%, transparent 62%),
+      radial-gradient(65% 40% at 16% 18%, #3b6bef 0%, transparent 58%),
+      radial-gradient(60% 42% at 84% 40%, #2447c4 0%, transparent 60%),
+      radial-gradient(65% 38% at 22% 55%, #16297e 0%, transparent 58%),
+      linear-gradient(180deg, #0a1442 0%, #071033 32%, #050a20 52%, #02040c 72%, #000000 92%);
     background-size: cover;
     background-position: center;
     display: flex;
     flex-direction: column;
     color: var(--ink);
     user-select: none;
-  }
-
-  /* mountain-dusk silhouette layer — hidden automatically when a custom
-     background photo is set, since that replaces the sky gradient itself */
-  .screen::before,
-  .homescreen::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 390 844'%3E%3Ccircle cx='195' cy='420' r='70' fill='%23ffdca0' opacity='0.55'/%3E%3Cpolygon points='0,520 60,430 130,490 210,400 300,470 390,410 390,844 0,844' fill='%233a2a5c' opacity='0.9'/%3E%3Cpolygon points='0,600 90,520 180,570 260,500 390,560 390,844 0,844' fill='%23241a3e' opacity='0.95'/%3E%3Cpolygon points='0,680 100,610 220,660 320,600 390,640 390,844 0,844' fill='%23150f28'/%3E%3C/svg%3E");
-    background-size: cover;
-    background-position: bottom center;
-    background-repeat: no-repeat;
-    pointer-events: none;
-  }
-  .screen.has-custom-bg::before,
-  .homescreen.has-custom-bg::before {
-    display: none;
   }
 
   .screen::after {
@@ -256,7 +243,12 @@
     transform: scale(0.9);
     pointer-events: none;
     padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 4px);
-    background: linear-gradient(180deg, #ffb37a 0%, #f2795f 18%, #c85a86 34%, #6f3f88 52%, #2c1e4d 68%, #0d0a1c 84%, #000000 96%);
+    background:
+      radial-gradient(55% 32% at 72% 5%, #6ea8ff 0%, transparent 62%),
+      radial-gradient(65% 40% at 16% 18%, #3b6bef 0%, transparent 58%),
+      radial-gradient(60% 42% at 84% 40%, #2447c4 0%, transparent 60%),
+      radial-gradient(65% 38% at 22% 55%, #16297e 0%, transparent 58%),
+      linear-gradient(180deg, #0a1442 0%, #071033 32%, #050a20 52%, #02040c 72%, #000000 92%);
     background-size: cover;
     background-position: center;
     transition: opacity 0.45s ease, transform 0.45s ease;
@@ -1019,10 +1011,6 @@
         // same photo shows through the whole unlock experience
         screenEl.style.backgroundImage = withScrim;
         homescreenEl.style.backgroundImage = withScrim;
-        // a custom photo replaces the mountain-dusk scene entirely, so hide
-        // that silhouette layer rather than leaving it floating over the photo
-        screenEl.classList.add("has-custom-bg");
-        homescreenEl.classList.add("has-custom-bg");
         // mirrored onto <body> too, so if the viewport ever peeks past .screen
         // by a hairline, it shows the same photo instead of the fallback color
         document.body.style.backgroundImage = img;
@@ -1033,8 +1021,6 @@
       } else {
         screenEl.style.backgroundImage = "";
         homescreenEl.style.backgroundImage = "";
-        screenEl.classList.remove("has-custom-bg");
-        homescreenEl.classList.remove("has-custom-bg");
         document.body.style.backgroundImage = "";
         settingsPreview.style.backgroundImage = "";
         settingsPreview.textContent = "No custom image set";
