@@ -1,53 +1,26 @@
 <!DOCTYPE html>
 <html lang="he" dir="ltr">
 <head>
-<meta charset="utf-8" />
-<title>נעילה</title>
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+<meta charset="utf-8">
+<title>Keypad Test</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <style>
   :root {
     --ink: #ffffff;
     --ink-dim: rgba(255,255,255,0.62);
     --ink-faint: rgba(255,255,255,0.36);
-    --glass: rgba(255,255,255,0.16);
-    --glass-press: rgba(255,255,255,0.34);
-    --glass-border: rgba(255,255,255,0.14);
     --dot-empty: rgba(255,255,255,0.9);
   }
-
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
   html, body {
     margin: 0;
     overflow-x: hidden;
-    /* Safari (in a plain browser tab, not installed) falls back to this
-       literal background-color for its own status bar / address bar chrome
-       before the real-photo scroll trick below engages — kept in sync with
-       the wallpaper's average color from JS; this default roughly matches
-       the built-in wallpaper's overall tone */
-    background: #14275c;
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+    background: #808080;
   }
-
   body {
-    /* the wallpaper lives here — a real, non-fixed, scrollable element —
-       instead of on .screen. Safari only shows ACTUAL live page content
-       through its status bar / address bar (not just a sampled color) for
-       genuinely scrollable content; position:fixed content never gets that
-       treatment. 100px of extra height above and below the viewport lets
-       the JS below nudge the scroll position on load — enough to make
-       Safari treat this as a real scroll and switch on that real-content
-       compositing — while landing exactly back on the centered framing, so
-       nothing the user sees ever appears to move */
     height: calc(100dvh + 200px);
-    background-image:
-      radial-gradient(55% 32% at 72% 5%, #6ea8ff 0%, transparent 62%),
-      radial-gradient(65% 40% at 16% 18%, #3b6bef 0%, transparent 58%),
-      radial-gradient(60% 42% at 84% 40%, #2447c4 0%, transparent 60%),
-      radial-gradient(65% 38% at 22% 55%, #16297e 0%, transparent 58%),
-      linear-gradient(180deg, #0a1442 0%, #071033 32%, #050a20 52%, #02040c 72%, #000000 92%);
-    background-size: cover;
-    background-position: center;
+    background-image: linear-gradient(90deg, #ff0000 0%, #ff0000 50%, #003cff 50%, #003cff 100%);
   }
 
   .screen {
@@ -60,16 +33,9 @@
     color: var(--ink);
     user-select: none;
   }
-
   .screen::after {
     content: "";
     position: absolute;
-    /* deliberately NOT inset:0 — any painted pixel (even at 18% opacity)
-       directly behind the true status bar disables Safari's real-content
-       compositing there and falls back to a flat color. env(safe-area-
-       inset-top) is 0 in a plain (non-installed) tab, so it can't be used
-       to find that boundary — 60px is a hardcoded safe estimate covering
-       Dynamic Island / notch / plain status bar heights */
     top: 60px;
     left: 0;
     right: 0;
@@ -78,7 +44,6 @@
     pointer-events: none;
   }
 
-  /* passcode section — positions approved by user, do not adjust spacing/placement here */
   .lockbody {
     flex: 1 1 auto;
     display: flex;
@@ -86,14 +51,8 @@
     align-items: center;
     justify-content: flex-end;
     gap: 26px;
-    padding-top: calc(env(safe-area-inset-top, 0px) + 14px);
-    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 112px);
-    transition: opacity 0.4s ease, transform 0.4s ease;
-  }
-  .lockbody.hidden {
-    opacity: 0;
-    transform: scale(1.08);
-    pointer-events: none;
+    padding-top: 14px;
+    padding-bottom: 112px;
   }
 
   .headline {
@@ -101,54 +60,12 @@
     font-weight: 600;
     color: var(--ink);
     padding: 10px 18px;
-    border-radius: 12px;
-    cursor: default;
     text-shadow: 0 1px 10px rgba(0,0,0,0.25);
   }
 
-  .dots {
-    display: flex;
-    gap: 20px;
-    height: 14px;
-    align-items: center;
-    direction: ltr;
-    margin-top: -12px;
-    margin-bottom: 22px;
-  }
-  .dot {
-    width: 13px;
-    height: 13px;
-    border-radius: 50%;
-    border: 2px solid var(--dot-empty);
-    background: transparent;
-    transition: background 0.15s ease, transform 0.15s ease, border-color 0.15s ease;
-  }
-  .dot.filled {
-    background: var(--ink);
-    border-color: var(--ink);
-    transform: scale(1.05);
-  }
+  .dots { display: flex; gap: 20px; height: 14px; align-items: center; direction: ltr; margin-top: -12px; margin-bottom: 22px; }
+  .dot { width: 13px; height: 13px; border-radius: 50%; border: 2px solid var(--dot-empty); background: transparent; }
 
-  /* mimics the real iOS wrong-passcode spring shake: a sharp initial
-     snap that decays through several oscillations, rather than a
-     uniform side-to-side wobble */
-  .dots.shake { animation: shake 0.55s cubic-bezier(.36,.07,.19,.97); }
-  @keyframes shake {
-    0% { transform: translateX(0); }
-    8% { transform: translateX(-17px); }
-    16% { transform: translateX(14px); }
-    24% { transform: translateX(-12px); }
-    32% { transform: translateX(10px); }
-    40% { transform: translateX(-8px); }
-    48% { transform: translateX(6px); }
-    56% { transform: translateX(-4px); }
-    64% { transform: translateX(3px); }
-    72% { transform: translateX(-2px); }
-    80% { transform: translateX(1px); }
-    100% { transform: translateX(0); }
-  }
-
-  /* keypad */
   .keypad {
     display: grid;
     grid-template-columns: repeat(3, 76px);
@@ -157,80 +74,26 @@
     justify-content: center;
     direction: ltr;
   }
-  @media (max-width: 380px) {
-    .keypad { grid-template-columns: repeat(3, 66px); grid-auto-rows: 66px; gap: 18px; }
-  }
-  @media (max-height: 700px) {
-    .keypad { grid-template-columns: repeat(3, 62px); grid-auto-rows: 62px; gap: 14px; }
-  }
-
   .key {
-    border: none;
     border-radius: 50%;
     background: rgba(255,255,255,0.02);
     border: 1px solid rgba(255,255,255,0.2);
     color: var(--ink);
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
     font-size: 36px;
     font-weight: 400;
-    line-height: 1;
-    cursor: pointer;
     backdrop-filter: blur(18px) brightness(1.25) saturate(70%);
     -webkit-backdrop-filter: blur(18px) brightness(1.25) saturate(70%);
-    /* thin light-catching rim along the edge, not a full glossy face */
     box-shadow: inset 0 1px 1.5px rgba(255,255,255,0.45), inset 0 -1px 1px rgba(255,255,255,0.06);
-    transition: background 0.2s ease, box-shadow 0.2s ease;
   }
-  /* brief confirmation flash used for secret-trigger feedback (e.g. the
-     Cancel double-tap snapshot), shown on the 0 key instead of Cancel
-     itself since a thumb pressing Cancel usually covers it */
-  .key.pulse-trigger {
-    background: rgba(255,255,255,0.14);
-    box-shadow: inset 0 1px 1.5px rgba(255,255,255,0.5), 0 0 8px rgba(255,255,255,0.22);
-  }
-  /* strong solid white digit — only the button glass itself is tinted by the background */
-  .key .num {
-    color: #ffffff;
-  }
-  /* always reserved, even when empty, so digits without letters (1, 0) still
-     align with the ones that have a two-line label underneath */
-  .key .sub {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1px;
-    height: 20px;
-    margin-top: 2px;
-  }
-  .key .sub .he {
-    font-size: 9px;
-    font-weight: 600;
-    letter-spacing: 1px;
-    color: var(--ink-dim);
-  }
-  .key .sub .en {
-    font-size: 8px;
-    font-weight: 600;
-    letter-spacing: 1.5px;
-    color: var(--ink-faint);
-  }
-  .key:active { background: var(--glass-press); }
-  .key.ghost { background: transparent; border-color: transparent; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; cursor: default; }
+  .key.ghost { background: transparent; border-color: transparent; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
 
-  /* contenteditable on #screen (for iPhone long-press-to-paste) was found to
-     break the real-photo status-bar compositing on real hardware — removed;
-     "Paste Image from Clipboard" in settings is the reliable path instead */
-
-  /* position approved by user, do not adjust */
   .keyrow-bottom {
     position: absolute;
-    left: 0;
-    right: 0;
-    bottom: calc(env(safe-area-inset-bottom, 0px) + 6px);
-    z-index: 6;
+    left: 0; right: 0;
+    bottom: 6px;
     display: flex;
     justify-content: space-between;
     width: 100%;
@@ -242,962 +105,63 @@
     color: var(--ink);
     text-shadow: 0 1px 8px rgba(0,0,0,0.25);
   }
-  .keyrow-bottom span { opacity: 0.92; cursor: pointer; transition: opacity 0.2s ease, text-shadow 0.2s ease; }
-  .keyrow-bottom span.pulse-cancel {
-    opacity: 1;
-    text-shadow: 0 0 10px rgba(255,255,255,0.7);
-  }
-  /* subtle armed indicator — invisible until the leading-1 trigger is on.
-     Uses the #armDot id selector so it reliably beats ".keyrow-bottom span"
-     above (which would otherwise force opacity:0.92 on it regardless of state). */
-  #armDot {
-    opacity: 0;
-    margin-left: 2px;
+
+  .note {
+    position: fixed;
+    top: 6%;
+    left: 0; right: 0;
+    text-align: center;
+    font-family: -apple-system, sans-serif;
+    font-size: 13px;
     font-weight: 700;
-    transition: opacity 0.2s ease;
-  }
-  #armDot.show { opacity: 1; }
-
-  /* fake home screen — revealed with an iOS-style unlock zoom */
-  .homescreen {
-    position: absolute;
-    inset: 0;
-    z-index: 10;
-    display: flex;
-    flex-direction: column;
-    opacity: 0;
-    transform: scale(0.9);
-    pointer-events: none;
-    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 4px);
-    transition: opacity 0.45s ease, transform 0.45s ease;
-  }
-  .homescreen.show { opacity: 1; transform: scale(1); pointer-events: auto; }
-
-  .app-grid {
-    flex: 1 1 auto;
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    grid-auto-flow: row dense;
-    justify-items: center;
-    align-content: start;
-    gap: 22px 8px;
+    color: #fff;
+    text-shadow: 0 0 6px #000, 0 0 12px #000;
     padding: 0 20px;
-    margin-top: calc(env(safe-area-inset-top, 0px) + 22px);
-    direction: ltr;
-  }
-  .app {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-    width: 100%;
-    cursor: default;
-  }
-  /* .app-icon is just a positioning box so the badge (which pokes outside
-     via negative offsets) isn't clipped by the face's own rounded overflow */
-  .app-icon {
-    position: relative;
-    width: 66px;
-    height: 66px;
-  }
-  .app-icon-face {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    border-radius: 15px;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.18);
-  }
-  /* glossy top highlight shared by every icon face, for a less flat look */
-  .app-icon-face::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(160deg, rgba(255,255,255,0.32) 0%, rgba(255,255,255,0) 42%, rgba(0,0,0,0.1) 100%);
-    pointer-events: none;
-  }
-  .app-icon svg { width: 68%; height: 68%; display: block; position: relative; }
-  .app-label {
-    font-size: 11px;
-    font-weight: 500;
-    color: var(--ink);
-    text-shadow: 0 1px 4px rgba(0,0,0,0.5);
-    text-align: center;
-  }
-  .app.mail-app { cursor: pointer; }
-
-  .page-dots {
-    flex: 0 0 auto;
-    display: flex;
-    justify-content: center;
-    gap: 7px;
-    padding: 10px 0 16px;
-  }
-  .page-dots i {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.4);
-    display: block;
-  }
-  .page-dots i.active { background: rgba(255,255,255,0.95); }
-
-  .badge {
-    position: absolute;
-    top: -8px;
-    right: -10px;
-    min-width: 25px;
-    height: 25px;
-    padding: 0 6px;
-    border-radius: 13px;
-    background: #ff3b30;
-    border: 2px solid rgba(0,0,0,0.12);
-    color: #fff;
-    font-size: 14px;
-    font-weight: 600;
-    white-space: nowrap;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.5);
-    font-variant-numeric: tabular-nums;
-    direction: ltr;
-    z-index: 1;
-  }
-
-  .dock {
-    flex: 0 0 auto;
-    margin: 0 16px;
-    padding: 12px 16px;
-    border-radius: 32px;
-    background: rgba(255,255,255,0.14);
-    border: 1px solid rgba(255,255,255,0.16);
-    backdrop-filter: blur(24px) saturate(180%);
-    -webkit-backdrop-filter: blur(24px) saturate(180%);
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    direction: ltr;
-  }
-  .dock .app-icon { width: 62px; height: 62px; }
-
-  /* background settings sheet */
-  .settings {
-    position: absolute;
-    inset: 0;
-    z-index: 20;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(0,0,0,0.55);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.25s ease;
-  }
-  .settings.show { opacity: 1; pointer-events: auto; }
-
-  .settings-card {
-    width: min(320px, 86%);
-    max-height: 82vh;
-    overflow-y: auto;
-    background: rgba(28,22,26,0.92);
-    border: 1px solid var(--glass-border);
-    border-radius: 22px;
-    padding: 22px;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
-  }
-  .settings-title {
-    font-size: 16px;
-    font-weight: 700;
-    text-align: center;
-    color: var(--ink);
-  }
-  .settings-preview {
-    height: 140px;
-    border-radius: 14px;
-    border: 1px solid var(--glass-border);
-    background-size: cover;
-    background-position: center;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 13px;
-    color: var(--ink-faint);
-    text-align: center;
-    padding: 12px;
-  }
-  .settings-btn {
-    display: block;
-    text-align: center;
-    padding: 12px 16px;
-    border-radius: 14px;
-    border: 1px solid var(--glass-border);
-    background: var(--glass);
-    color: var(--ink);
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    font-family: inherit;
-  }
-  .settings-btn:active { background: var(--glass-press); }
-  .settings-btn.ghost-btn { background: transparent; color: var(--ink-dim); border-color: transparent; }
-
-  .attempt-picker {
-    display: flex;
-    justify-content: center;
-    gap: 8px;
-  }
-  .attempt-picker button {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    border: 1px solid var(--glass-border);
-    background: var(--glass);
-    color: var(--ink);
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    font-family: inherit;
-  }
-  .attempt-picker button.active {
-    background: #8f9dff;
-    border-color: transparent;
-    color: #fff;
-  }
-
-  /* shown only while actively replacing icon pictures, tap to exit */
-  .icon-edit-banner {
-    position: absolute;
-    left: 14px;
-    right: 14px;
-    top: calc(env(safe-area-inset-top, 0px) + 10px);
-    z-index: 15;
-    text-align: center;
-    padding: 10px 14px;
-    border-radius: 14px;
-    background: rgba(0,0,0,0.55);
-    border: 1px solid rgba(255,255,255,0.18);
-    color: #fff;
-    font-size: 13px;
-    font-weight: 600;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.2s ease;
-    cursor: pointer;
-  }
-  .icon-edit-banner.show { opacity: 1; pointer-events: auto; }
-
-  @media (prefers-reduced-motion: reduce) {
-    * { transition-duration: 0.001ms !important; animation-duration: 0.001ms !important; }
+    z-index: 50;
   }
 </style>
+<script>
+  function centerScroll() { window.scrollTo(0, 100); }
+  centerScroll();
+  window.addEventListener('load', centerScroll);
+  window.addEventListener('resize', centerScroll);
+  [0, 50, 150, 400, 900, 1500].forEach(function (ms) { setTimeout(centerScroll, ms); });
+</script>
 </head>
 <body>
-
-<div class="screen" id="screen">
-
-  <div class="lockbody" id="lockbody">
-    <div class="headline" id="headline" lang="he">יש להזין את קוד הגישה <span style="font-size:11px; opacity:0.6; font-weight:400; vertical-align:middle;" dir="ltr">[v11 scrollY=<span id="scrollDebug">?</span>]</span></div>
-    <div class="dots" id="dots"></div>
-
-    <div class="keypad" id="keypad">
-      <!-- built by JS -->
-    </div>
-
-    <div class="keyrow-bottom" lang="he">
-      <span id="emergency">שיחת חירום<span class="armdot" id="armDot">.</span></span>
-      <span id="cancel">ביטול</span>
-    </div>
-  </div>
-
-  <div class="homescreen" id="homescreen">
-    <div class="icon-edit-banner" id="iconEditBanner">Tap an icon to replace its picture · Tap here when done</div>
-    <div class="app-grid" id="appGrid"><!-- built by JS --></div>
-    <div class="page-dots" id="pageDots"><!-- built by JS --></div>
-    <div class="dock" id="dock"><!-- built by JS --></div>
-  </div>
-
-  <div class="settings" id="settings">
-    <div class="settings-card">
-      <div class="settings-title">Lock Screen Background</div>
-      <div class="settings-preview" id="settingsPreview">No custom image set</div>
-      <label class="settings-btn" for="bgFileInput">Choose Photo</label>
-      <input type="file" id="bgFileInput" accept="image/*" style="display:none" />
-      <button class="settings-btn ghost-btn" id="pasteBgBtn">Paste Image from Clipboard</button>
-      <button class="settings-btn ghost-btn" id="removeBgBtn">Remove Background</button>
-      <button class="settings-btn ghost-btn" id="editIconsBtn">Customize App Icons</button>
-      <button class="settings-btn ghost-btn" id="resetIconsBtn">Reset All Icons</button>
-      <div class="settings-title">Unlock on Attempt #</div>
-      <div class="attempt-picker" id="attemptPicker"><!-- built by JS --></div>
-      <button class="settings-btn ghost-btn" id="closeSettingsBtn">Close</button>
-      <input type="file" id="iconFileInput" accept="image/*" style="display:none" />
+  <div class="note">Real keypad UI + real scroll mechanism. Check status bar &amp; bottom bar for red/blue split. scrollY=<span id="sy">?</span></div>
+  <div class="screen">
+    <div class="lockbody">
+      <div class="headline" lang="he">יש להזין את קוד הגישה</div>
+      <div class="dots">
+        <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      </div>
+      <div class="keypad">
+        <button class="key">1</button>
+        <button class="key">2</button>
+        <button class="key">3</button>
+        <button class="key">4</button>
+        <button class="key">5</button>
+        <button class="key">6</button>
+        <button class="key">7</button>
+        <button class="key">8</button>
+        <button class="key">9</button>
+        <button class="key ghost"></button>
+        <button class="key">0</button>
+        <button class="key ghost"></button>
+      </div>
+      <div class="keyrow-bottom" lang="he">
+        <span>שיחת חירום</span>
+        <span>ביטול</span>
+      </div>
     </div>
   </div>
-
-</div>
-
-<script>
-  (function () {
-    // <body> is 100px taller than the viewport on each side specifically so
-    // this can nudge the scroll position — that's what makes Safari treat
-    // the page as genuinely scrollable and switch its status bar / address
-    // bar to compositing real page content instead of a flat sampled color.
-    // Landing on exactly the added top margin re-centers the same framing
-    // the wallpaper would have shown unscrolled, so nothing visibly moves.
-    function centerScroll() { window.scrollTo(0, 100); }
-    centerScroll();
-    window.addEventListener("load", centerScroll);
-    window.addEventListener("orientationchange", function () { setTimeout(centerScroll, 50); });
-    window.addEventListener("resize", centerScroll);
-    // real hardware can differ from the simulator in exactly when Safari is
-    // ready to notice the scroll and switch on real-content compositing —
-    // re-firing at a few delays costs nothing and covers that uncertainty
-    [0, 50, 150, 400, 900, 1500].forEach(function (ms) {
-      setTimeout(centerScroll, ms);
-    });
-    // TEMP DEBUG: proves the automatic (non-touch) scroll is actually
-    // happening — shows the live window.scrollY value on screen
+  <script>
     setInterval(function () {
-      var el = document.getElementById("scrollDebug");
+      var el = document.getElementById('sy');
       if (el) el.textContent = window.scrollY;
     }, 200);
-
-    var digitMode = 6;
-    var entered = "";
-    var doubleTapWindow = 320;
-    var lastTap = 0;
-    var savedSubtrahend = null;
-    var cancelLastTap = 0;
-    var cancelDeleteTimer = null;
-    var prependOne = false;
-    var emergencyLastTap = 0;
-    var attemptCount = 0;
-    var REQUIRED_ATTEMPT_KEY = "lockscreen_required_attempt";
-    var requiredAttempt = 1;
-    try {
-      var savedAttempt = parseInt(localStorage.getItem(REQUIRED_ATTEMPT_KEY), 10);
-      if (savedAttempt >= 1 && savedAttempt <= 5) requiredAttempt = savedAttempt;
-    } catch (e) {}
-
-    var dotsEl = document.getElementById("dots");
-    var headlineEl = document.getElementById("headline");
-    var keypadEl = document.getElementById("keypad");
-    var homescreenEl = document.getElementById("homescreen");
-    var appGridEl = document.getElementById("appGrid");
-    var dockEl = document.getElementById("dock");
-    var lockbodyEl = document.getElementById("lockbody");
-    var cancelEl = document.getElementById("cancel");
-    var emergencyEl = document.getElementById("emergency");
-    var armDotEl = document.getElementById("armDot");
-
-    function updateArmIndicator() {
-      armDotEl.classList.toggle("show", prependOne);
-    }
-
-    var zeroKeyEl = null;
-
-    var keys = [
-      { d: "1" },
-      { d: "2", he: "דהו", en: "ABC" },
-      { d: "3", he: "אבג", en: "DEF" },
-      { d: "4", he: "מנ", en: "GHI" },
-      { d: "5", he: "יכל", en: "JKL" },
-      { d: "6", he: "זחט", en: "MNO" },
-      { d: "7", he: "רשת", en: "PQRS" },
-      { d: "8", he: "צק", en: "TUV" },
-      { d: "9", he: "סעפ", en: "WXYZ" },
-      { ghost: true }, { d: "0", noSub: true }, { ghost: true }
-    ];
-
-    keys.forEach(function (k) {
-      var btn = document.createElement("button");
-      btn.className = "key" + (k.ghost ? " ghost" : "");
-      if (k.ghost) {
-        keypadEl.appendChild(btn);
-        return;
-      }
-      // sub row is reserved (even empty) so 1 lines up with the lettered keys —
-      // 0 skips it entirely so it sits dead-center in its circle
-      var sub = k.noSub ? '' : '<span class="sub"><span class="he" lang="he">' + (k.he || "") + '</span><span class="en">' + (k.en || "") + '</span></span>';
-      btn.innerHTML = '<span class="num">' + k.d + '</span>' + sub;
-      btn.addEventListener("click", function () {
-        if (entered.length >= digitMode) return;
-        entered += k.d;
-        renderDots();
-        if (entered.length === digitMode) {
-          setTimeout(onCodeComplete, 180);
-        }
-      });
-      if (k.d === "0") zeroKeyEl = btn;
-      keypadEl.appendChild(btn);
-    });
-
-    function renderDots() {
-      dotsEl.innerHTML = "";
-      for (var i = 0; i < digitMode; i++) {
-        var d = document.createElement("div");
-        d.className = "dot" + (i < entered.length ? " filled" : "");
-        dotsEl.appendChild(d);
-      }
-    }
-
-    // ---- fake home screen: app grid + dock, built the same way the keypad is ----
-    var ICON_PHONE = '<path d="M6.6 10.8c1.4 2.8 3.8 5.2 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.2c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z" fill="#fff"/>';
-    var ICON_MESSAGES = '<path d="M12 3C6.5 3 2 6.9 2 11.5c0 2.5 1.3 4.7 3.4 6.3-.1.9-.5 2.3-1.4 3.6 1.6-.2 3.4-.9 4.6-1.7 1 .3 2.2.4 3.4.4 5.5 0 10-3.9 10-8.6S17.5 3 12 3z" fill="#fff"/>';
-    var ICON_MUSIC = '<defs><linearGradient id="gNote" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#ffe1ea"/></linearGradient></defs><circle cx="7" cy="18" r="3.1" fill="url(#gNote)"/><circle cx="18" cy="16" r="3.1" fill="url(#gNote)"/><path d="M10 18V6l11-2v10" stroke="#fff" stroke-width="1.7" fill="none" stroke-linecap="round" stroke-linejoin="round"/>';
-    var ICON_SAFARI = '<circle cx="12" cy="12" r="8.6" fill="none" stroke="#f2f2f2" stroke-width="0.6"/><circle cx="12" cy="12" r="8" fill="none" stroke="#0a84ff" stroke-width="1.3"/><polygon points="12,5.2 14.1,12 12,12" fill="#ff3b30"/><polygon points="12,12 9.9,12 12,18.8" fill="#e8e8e8"/>';
-    var ICON_CALENDAR = '<rect x="3" y="3" width="18" height="18" rx="4" fill="#fff"/><rect x="3" y="3" width="18" height="7" rx="4" fill="#ff453a"/><rect x="3" y="7" width="18" height="3" fill="#ff453a"/><text id="calWeekday" x="12" y="8.2" font-size="4.3" font-weight="700" text-anchor="middle" fill="#fff">יום</text><text id="calDayNum" x="12" y="18.7" font-size="10" font-weight="600" text-anchor="middle" fill="#1c1c1e">•</text>';
-    var ICON_CAMERA = '<defs><radialGradient id="gLens" cx="0.35" cy="0.3" r="0.9"><stop offset="0" stop-color="#5ac8fa"/><stop offset="0.55" stop-color="#0a84ff"/><stop offset="1" stop-color="#1c1c8e"/></radialGradient></defs><rect x="2.5" y="6.5" width="19" height="13" rx="3" fill="#f2f2f2"/><rect x="8.3" y="3.6" width="7.4" height="3.2" rx="1.2" fill="#f2f2f2"/><circle cx="12" cy="13.2" r="4.1" fill="#1c1c1e"/><circle cx="12" cy="13.2" r="3.1" fill="url(#gLens)"/><circle cx="10.7" cy="11.9" r="0.9" fill="#ffffff" opacity="0.7"/><circle cx="17.6" cy="8.3" r="0.7" fill="#ff3b30"/>';
-    var ICON_PHOTOS = '<g transform="translate(12,12)">' +
-      '<ellipse cx="0" cy="-4.6" rx="2.6" ry="4.8" fill="#ffcc00"/>' +
-      '<ellipse cx="0" cy="-4.6" rx="2.6" ry="4.8" fill="#ff9500" transform="rotate(60)"/>' +
-      '<ellipse cx="0" cy="-4.6" rx="2.6" ry="4.8" fill="#ff375f" transform="rotate(120)"/>' +
-      '<ellipse cx="0" cy="-4.6" rx="2.6" ry="4.8" fill="#af52de" transform="rotate(180)"/>' +
-      '<ellipse cx="0" cy="-4.6" rx="2.6" ry="4.8" fill="#0a84ff" transform="rotate(240)"/>' +
-      '<ellipse cx="0" cy="-4.6" rx="2.6" ry="4.8" fill="#30d158" transform="rotate(300)"/>' +
-      '<circle cx="0" cy="0" r="2" fill="#fff"/></g>';
-    var ICON_MAPS = '<path d="M4 15.5l4.5-2 4 1.6 4.2-1.8L20 15" stroke="#eaf4e6" stroke-width="1.6" fill="none" opacity="0.85"/><path d="M12 2.2C8.2 2.2 5.2 5.2 5.2 9c0 5.2 5.9 11.9 6.3 12.3.3.3.7.3 1 0 .4-.4 6.3-7.1 6.3-12.3 0-3.8-3-6.8-6.8-6.8z" fill="#fff"/><circle cx="12" cy="9" r="2.7" fill="#20a84a"/><circle cx="12" cy="9" r="1.1" fill="#fff"/>';
-    var ICON_WEATHER = '<circle cx="16.2" cy="7.2" r="4.3" fill="#ffd60a"/><circle cx="16.2" cy="7.2" r="4.3" fill="none" stroke="#fff" stroke-width="0.4" opacity="0.5"/><ellipse cx="9.5" cy="16.2" rx="7.4" ry="4.5" fill="#ffffff"/><ellipse cx="15.2" cy="15.4" rx="4.2" ry="3.1" fill="#ffffff"/>';
-    var ICON_NOTES = '<rect x="4" y="3" width="16" height="18" rx="2.5" fill="#fdfdfb"/><rect x="4" y="3" width="16" height="4.4" rx="2.5" fill="#ffcc33"/><circle cx="8" cy="5.2" r="0.9" fill="#e8a300"/><circle cx="12" cy="5.2" r="0.9" fill="#e8a300"/><circle cx="16" cy="5.2" r="0.9" fill="#e8a300"/><line x1="7" y1="11" x2="17" y2="11" stroke="#d8d8d8" stroke-width="1.1"/><line x1="7" y1="14.4" x2="17" y2="14.4" stroke="#d8d8d8" stroke-width="1.1"/><line x1="7" y1="17.8" x2="13.5" y2="17.8" stroke="#d8d8d8" stroke-width="1.1"/>';
-    var ICON_REMINDERS = '<rect x="4" y="4" width="16" height="16" rx="3" fill="#fff"/><circle cx="8" cy="9" r="1.7" fill="#ff453a"/><line x1="11" y1="9" x2="17.5" y2="9" stroke="#3a3a3c" stroke-width="1.4" stroke-linecap="round"/><circle cx="8" cy="14.2" r="1.7" fill="#ff9500"/><line x1="11" y1="14.2" x2="17.5" y2="14.2" stroke="#3a3a3c" stroke-width="1.4" stroke-linecap="round"/>';
-    var ICON_APPSTORE = '<defs><linearGradient id="gStore" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#dfeeff"/></linearGradient></defs><path d="M12 3.2c.35 0 .67.19.84.5l6.9 12.2c.34.6-.1 1.35-.8 1.35h-2.05a1 1 0 01-.87-.5L12.6 10 8.98 16.75a1 1 0 01-.87.5H6.06c-.7 0-1.14-.75-.8-1.35l6.9-12.2c.17-.31.49-.5.84-.5z" fill="url(#gStore)"/><path d="M9.3 19.8l1.2-2.1h2.9l1.2 2.1a1 1 0 01-.87 1.5H10.2a1 1 0 01-.87-1.5z" fill="url(#gStore)"/>';
-    var ICON_SETTINGS = '<path d="M12 8.5a3.5 3.5 0 100 7 3.5 3.5 0 000-7zm8.4 3.5c0-.6-.1-1.1-.2-1.6l2-1.6-2-3.4-2.3.9c-.8-.7-1.8-1.2-2.8-1.5L14.6 2H9.4l-.5 2.8c-1 .3-2 .8-2.8 1.5l-2.3-.9-2 3.4 2 1.6c-.1.5-.2 1-.2 1.6s.1 1.1.2 1.6l-2 1.6 2 3.4 2.3-.9c.8.7 1.8 1.2 2.8 1.5l.5 2.8h5.2l.5-2.8c1-.3 2-.8 2.8-1.5l2.3.9 2-3.4-2-1.6c.1-.5.2-1 .2-1.6z" fill="#f2f2f2"/><circle cx="12" cy="12" r="2.3" fill="#8e8e93"/>';
-    var ICON_WALLET = '<rect x="4.5" y="4" width="15" height="10" rx="2.4" fill="#4a4a4c" transform="rotate(-6 12 9)"/><rect x="3" y="7" width="18" height="12" rx="2.6" fill="#232325"/><rect x="3" y="10.4" width="18" height="3.2" fill="#f2c14e"/><rect x="3" y="10.4" width="18" height="3.2" fill="#ff9500" opacity="0.35"/><circle cx="17" cy="16" r="1.7" fill="#fff"/>';
-    var ICON_HEALTH = '<defs><linearGradient id="gHeart" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff5e7a"/><stop offset="1" stop-color="#ff2d55"/></linearGradient></defs><path d="M12 20s-7-4.2-9-8C1.2 8.6 2.8 5 6.3 5c2 0 3.4 1.2 3.9 2.4C10.6 6.2 12 5 14 5c3.5 0 5.1 3.6 3.3 7-2 3.8-9 8-9 8z" fill="url(#gHeart)"/><path d="M6 12.5l2-2.2 1.6 1.6 2.2-3.4 1.4 2 2.4-1.8" stroke="#fff" stroke-width="0.9" fill="none" opacity="0.8" stroke-linecap="round" stroke-linejoin="round"/>';
-    var ICON_CONTACTS = '<circle cx="12" cy="8.2" r="4" fill="#e5e5ea"/><path d="M4 20c0-4.4 3.6-7 8-7s8 2.6 8 7" fill="none" stroke="#e5e5ea" stroke-width="1.9" stroke-linecap="round"/>';
-    var ICON_FILES = '<path d="M3 7.5a2 2 0 012-2h4.2l1.6 2H19a2 2 0 012 2v7.5a2 2 0 01-2 2H5a2 2 0 01-2-2V7.5z" fill="#eaf2ff"/><path d="M3 9.5h18v7.5a2 2 0 01-2 2H5a2 2 0 01-2-2z" fill="#ffffff"/>';
-    var ICON_MAIL = '<rect x="2.3" y="5.3" width="19.4" height="13.4" rx="2.8" fill="#fff"/><path d="M2.3 7l9.7 7 9.7-7" stroke="#bcd3fb" stroke-width="4.6" fill="none" opacity="0.8"/><path d="M2.3 6.8l9.7 7.2 9.7-7.2" stroke="#2f6fed" stroke-width="1.7" fill="none" stroke-linecap="round" stroke-linejoin="round"/>';
-    var ICON_PODCASTS = '<circle cx="12" cy="12" r="9.5" fill="#fff" opacity="0.12"/><circle cx="12" cy="12" r="6.6" fill="none" stroke="#fff" stroke-width="1.6"/><circle cx="12" cy="12" r="2.7" fill="#fff"/>';
-    var ICON_STOCKS = '<polyline points="3,17 8,12.5 11,15.2 15,8.5 21,4" fill="none" stroke="#30d158" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><polyline points="16,4 21,4 21,9" fill="none" stroke="#30d158" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>';
-    var ICON_COMPASS = '<circle cx="12" cy="12" r="8.6" fill="none" stroke="#fff" stroke-width="1.3"/><polygon points="12,5.2 14,12 12,18.8 10,12" fill="#ff9500"/><circle cx="12" cy="12" r="1.2" fill="#fff"/>';
-    var ICON_CALC = '<rect x="6" y="4.5" width="12" height="4" rx="1" fill="#141416"/><circle cx="8" cy="12" r="1.35" fill="#ff9f0a"/><circle cx="12" cy="12" r="1.35" fill="#3a3a3c"/><circle cx="16" cy="12" r="1.35" fill="#3a3a3c"/><circle cx="8" cy="16.4" r="1.35" fill="#3a3a3c"/><circle cx="12" cy="16.4" r="1.35" fill="#3a3a3c"/><circle cx="16" cy="16.4" r="1.35" fill="#3a3a3c"/>';
-
-    var gridApps = [
-      { id: "calendar", label: "יומן", bg: ["#ffffff", "#f2f2f2", "#e2e2e2"], svg: ICON_CALENDAR },
-      { id: "camera", label: "מצלמה", bg: ["#4a4a4c", "#2c2c2e", "#141416"], svg: ICON_CAMERA },
-      { id: "photos", label: "תמונות", bg: ["#ffffff", "#f7f7f7", "#e9e9e9"], svg: ICON_PHOTOS },
-      { id: "maps", label: "מפות", bg: ["#4cd671", "#2fb156", "#187f39"], svg: ICON_MAPS },
-      { id: "weather", label: "מזג אוויר", bg: ["#5aa8f0", "#2f7fe0", "#124fae"], svg: ICON_WEATHER },
-      { id: "podcasts", label: "פודקאסטים", bg: ["#b968e0", "#8e44c9", "#5e2a8f"], svg: ICON_PODCASTS },
-      { id: "stocks", label: "מניות", bg: ["#3c3c3e", "#232325", "#0e0e10"], svg: ICON_STOCKS },
-      { id: "compass", label: "מצפן", bg: ["#3c3c3e", "#232325", "#0e0e10"], svg: ICON_COMPASS },
-      { id: "calculator", label: "מחשבון", bg: ["#a8a8ad", "#8e8e93", "#5f5f63"], svg: ICON_CALC },
-      { id: "notes", label: "פתקים", bg: ["#ffe27a", "#ffcc33", "#e8a300"], svg: ICON_NOTES },
-      { id: "reminders", label: "תזכורות", bg: ["#ffffff", "#f5f5f5", "#e6e6e6"], svg: ICON_REMINDERS },
-      { id: "appstore", label: "App Store", bg: ["#3aa0ff", "#0a6ee8", "#0048ad"], svg: ICON_APPSTORE },
-      { id: "settings", label: "הגדרות", bg: ["#a8a8ad", "#8e8e93", "#5f5f63"], svg: ICON_SETTINGS },
-      { id: "wallet", label: "Wallet", bg: ["#3c3c3e", "#232325", "#0e0e10"], svg: ICON_WALLET },
-      { id: "health", label: "בריאות", bg: ["#ffffff", "#f7f7f7", "#eeeeee"], svg: ICON_HEALTH },
-      { id: "facetime", label: "FaceTime", bg: ["#4cd671", "#2fb156", "#187f39"], svg: ICON_CAMERA },
-      { id: "contacts", label: "אנשי קשר", bg: ["#a8a8ad", "#8e8e93", "#5f5f63"], svg: ICON_CONTACTS },
-      { id: "files", label: "קבצים", bg: ["#3aa0ff", "#0a6ee8", "#0048ad"], svg: ICON_FILES },
-      { id: "mail", label: "Mail", bg: ["#6bc2ff", "#3b82f5", "#7b3fe4"], svg: ICON_MAIL, isMail: true }
-    ];
-
-    var dockApps = [
-      { id: "phone", label: "טלפון", bg: ["#4cd671", "#2fb156", "#187f39"], svg: ICON_PHONE },
-      { id: "safari", label: "ספארי", bg: ["#ffffff", "#f5f5f5", "#e6e6e6"], svg: ICON_SAFARI },
-      { id: "messages", label: "הודעות", bg: ["#4cd671", "#2fb156", "#187f39"], svg: ICON_MESSAGES },
-      { id: "music", label: "מוזיקה", bg: ["#ff6688", "#fc3158", "#c81030"], svg: ICON_MUSIC }
-    ];
-
-    var mailBadgeEl = null;
-    var iconEditMode = false;
-    var pendingIconId = null;
-    var iconFaceEls = {};
-    var iconSvgEls = {};
-    var iconDefaultBg = {};
-    var ICON_KEY_PREFIX = "lockscreen_icon_";
-
-    function bgGradient(bg) {
-      return "linear-gradient(160deg, " + bg[0] + " 0%, " + bg[1] + " 55%, " + bg[2] + " 100%)";
-    }
-
-    // applies a saved custom icon photo over the default gradient+glyph, if one exists
-    function applySavedIcon(id) {
-      var face = iconFaceEls[id];
-      if (!face) return;
-      var saved = null;
-      try { saved = localStorage.getItem(ICON_KEY_PREFIX + id); } catch (e) {}
-      if (saved) {
-        face.style.backgroundImage = "url(" + saved + ")";
-        face.style.backgroundSize = "cover";
-        // bottom-aligned: crops uploaded from a real home screen usually
-        // have the actual icon lower in frame, with wallpaper/neighbors above
-        face.style.backgroundPosition = "center bottom";
-        if (iconSvgEls[id]) iconSvgEls[id].style.display = "none";
-      } else {
-        face.style.background = iconDefaultBg[id] || "";
-        face.style.backgroundImage = "";
-        if (iconSvgEls[id]) iconSvgEls[id].style.display = "";
-      }
-    }
-
-    function onAppTapped(id, isMail) {
-      if (iconEditMode) {
-        pendingIconId = id;
-        document.getElementById("iconFileInput").click();
-        return;
-      }
-      if (isMail) {
-        homescreenEl.classList.remove("show");
-        setTimeout(function () {
-          entered = "";
-          renderDots();
-          lockbodyEl.classList.remove("hidden");
-        }, 300);
-      }
-    }
-
-    function buildApp(a) {
-      var wrap = document.createElement("div");
-      wrap.className = "app" + (a.isMail ? " mail-app" : "");
-      var icon = document.createElement("div");
-      icon.className = "app-icon";
-      var face = document.createElement("div");
-      face.className = "app-icon-face";
-      var defaultBg = bgGradient(a.bg);
-      face.style.background = defaultBg;
-      iconDefaultBg[a.id] = defaultBg;
-      face.innerHTML = '<svg viewBox="0 0 24 24">' + a.svg + "</svg>";
-      icon.appendChild(face);
-      if (a.isMail) {
-        var badge = document.createElement("div");
-        badge.className = "badge";
-        badge.id = "mailBadge";
-        badge.textContent = "0";
-        icon.appendChild(badge);
-        mailBadgeEl = badge;
-      }
-      var label = document.createElement("div");
-      label.className = "app-label";
-      label.textContent = a.label;
-      wrap.appendChild(icon);
-      wrap.appendChild(label);
-      iconFaceEls[a.id] = face;
-      iconSvgEls[a.id] = face.querySelector("svg");
-      wrap.addEventListener("click", function () { onAppTapped(a.id, a.isMail); });
-      return wrap;
-    }
-
-    gridApps.forEach(function (a) { appGridEl.appendChild(buildApp(a)); });
-    dockApps.forEach(function (a) {
-      var app = buildApp(a);
-      app.querySelector(".app-label").remove();
-      dockEl.appendChild(app);
-    });
-
-    Object.keys(iconFaceEls).forEach(applySavedIcon);
-
-    var heDayAbbr = ["יום א'", "יום ב'", "יום ג'", "יום ד'", "יום ה'", "יום ו'", "שבת"];
-    var calDayEl = document.getElementById("calDayNum");
-    var calWeekdayEl = document.getElementById("calWeekday");
-    var todayNow = new Date();
-    if (calDayEl) calDayEl.textContent = todayNow.getDate();
-    if (calWeekdayEl) calWeekdayEl.textContent = heDayAbbr[todayNow.getDay()];
-
-    var pageDotsEl = document.getElementById("pageDots");
-    for (var pd = 0; pd < 9; pd++) {
-      var dot = document.createElement("i");
-      if (pd === 8) dot.className = "active";
-      pageDotsEl.appendChild(dot);
-    }
-
-    // ---- icon edit mode: upload your own photo for any icon (grid, dock, or the clock widget) ----
-    var iconEditBannerEl = document.getElementById("iconEditBanner");
-    var editIconsBtn = document.getElementById("editIconsBtn");
-    var resetIconsBtn = document.getElementById("resetIconsBtn");
-    var iconFileInputEl = document.getElementById("iconFileInput");
-
-    function enterIconEditMode() {
-      iconEditMode = true;
-      iconEditBannerEl.classList.add("show");
-    }
-    function exitIconEditMode() {
-      iconEditMode = false;
-      iconEditBannerEl.classList.remove("show");
-    }
-    iconEditBannerEl.addEventListener("click", exitIconEditMode);
-
-    editIconsBtn.addEventListener("click", function () {
-      closeSettings();
-      enterIconEditMode();
-    });
-
-    resetIconsBtn.addEventListener("click", function () {
-      if (!window.confirm("Reset all custom app icon pictures back to the defaults? This can't be undone.")) return;
-      Object.keys(iconFaceEls).forEach(function (id) {
-        try { localStorage.removeItem(ICON_KEY_PREFIX + id); } catch (e) {}
-        applySavedIcon(id);
-      });
-    });
-
-    iconFileInputEl.addEventListener("change", function (e) {
-      var file = e.target.files && e.target.files[0];
-      iconFileInputEl.value = "";
-      if (!file || !pendingIconId) return;
-      var targetId = pendingIconId;
-      var reader = new FileReader();
-      reader.onload = function (ev) {
-        var img = new Image();
-        img.onload = function () {
-          var maxDim = 260;
-          var scale = Math.min(1, maxDim / Math.max(img.width, img.height));
-          var canvas = document.createElement("canvas");
-          canvas.width = Math.round(img.width * scale);
-          canvas.height = Math.round(img.height * scale);
-          var ctx = canvas.getContext("2d");
-          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-          var out = canvas.toDataURL("image/jpeg", 0.85);
-          try { localStorage.setItem(ICON_KEY_PREFIX + targetId, out); } catch (err) {}
-          applySavedIcon(targetId);
-        };
-        img.src = ev.target.result;
-      };
-      reader.readAsDataURL(file);
-    });
-
-    function pad2(x) { return x < 10 ? "0" + x : "" + x; }
-
-    // fires once a full code has been typed — if the required-attempt
-    // setting is above 1, earlier attempts fake a wrong-passcode shake and
-    // clear instead of unlocking, regardless of what was actually typed;
-    // only the configured attempt number computes the real result
-    function onCodeComplete() {
-      attemptCount++;
-      if (attemptCount < requiredAttempt) {
-        dotsEl.classList.add("shake");
-        setTimeout(function () {
-          dotsEl.classList.remove("shake");
-          entered = "";
-          renderDots();
-        }, 550);
-        return;
-      }
-      attemptCount = 0;
-      submit();
-    }
-
-    function submit() {
-      // if armed via double-tap on Emergency before entry, prepend a 1
-      // to the typed code and calculate from that instead
-      var codeStr = entered;
-      if (prependOne) {
-        codeStr = "1" + entered;
-        prependOne = false;
-        updateArmIndicator();
-      }
-      var n = parseInt(codeStr, 10);
-      var subtrahend;
-      if (savedSubtrahend !== null) {
-        // use the time snapshot captured at the double-tap, even if a
-        // minute or two has passed since then — consumed after this one use
-        subtrahend = savedSubtrahend;
-        savedSubtrahend = null;
-      } else {
-        var now = new Date();
-        var hhmm = parseInt(pad2(now.getHours()) + pad2(now.getMinutes()), 10);
-        var year = now.getFullYear();
-        subtrahend = hhmm + year;
-      }
-      var result = n - subtrahend;
-      mailBadgeEl.textContent = result.toLocaleString();
-      // unlock: lock content zooms/fades out, home screen zooms in shortly after
-      lockbodyEl.classList.add("hidden");
-      setTimeout(function () {
-        homescreenEl.classList.add("show");
-      }, 120);
-    }
-
-    // "Cancel" doubles as delete since the keypad itself is digits-only.
-    // A single tap deletes (after a short delay, to allow detecting a
-    // second tap); a double-tap instead snapshots the current HHmm+year
-    // so the calculation uses that saved moment even if the code is
-    // typed a minute or two later. Confirmation flashes on the 0 key
-    // instead of Cancel itself, since a thumb double-tapping Cancel
-    // usually covers Cancel's own text.
-    cancelEl.addEventListener("click", function () {
-      var now = Date.now();
-      if (now - cancelLastTap < doubleTapWindow) {
-        clearTimeout(cancelDeleteTimer);
-        cancelLastTap = 0;
-        var d = new Date();
-        var hhmm = parseInt(pad2(d.getHours()) + pad2(d.getMinutes()), 10);
-        savedSubtrahend = hhmm + d.getFullYear();
-        if (zeroKeyEl) {
-          zeroKeyEl.classList.add("pulse-trigger");
-          setTimeout(function () { zeroKeyEl.classList.remove("pulse-trigger"); }, 250);
-        }
-      } else {
-        cancelLastTap = now;
-        cancelDeleteTimer = setTimeout(function () {
-          entered = entered.slice(0, -1);
-          renderDots();
-        }, doubleTapWindow);
-      }
-    });
-
-    // secret gesture: double-tap "Emergency" to toggle arming a leading 1 —
-    // while armed, a "." shows next to the word; the next completed code
-    // gets a 1 prepended before the calculation (4444 -> 14444,
-    // 006473 -> 1006473), then auto-disarms after that one use
-    emergencyEl.addEventListener("click", function () {
-      var now = Date.now();
-      if (now - emergencyLastTap < doubleTapWindow) {
-        emergencyLastTap = 0;
-        prependOne = !prependOne;
-        updateArmIndicator();
-        emergencyEl.classList.add("pulse-cancel");
-        setTimeout(function () { emergencyEl.classList.remove("pulse-cancel"); }, 250);
-      } else {
-        emergencyLastTap = now;
-      }
-    });
-
-    // secret gesture: double-tap the Hebrew headline to switch 4/6 digit mode —
-    // no visual feedback beyond the dot count itself changing
-    headlineEl.addEventListener("click", function () {
-      var now = Date.now();
-      if (now - lastTap < doubleTapWindow) {
-        digitMode = digitMode === 6 ? 4 : 6;
-        entered = "";
-        renderDots();
-        lastTap = 0;
-      } else {
-        lastTap = now;
-      }
-    });
-
-    renderDots();
-
-    // ---- secret gesture: two-finger swipe down opens the background settings sheet ----
-    var screenEl = document.getElementById("screen");
-    var settingsEl = document.getElementById("settings");
-    var settingsPreview = document.getElementById("settingsPreview");
-    var bgFileInput = document.getElementById("bgFileInput");
-    var pasteBgBtn = document.getElementById("pasteBgBtn");
-    var removeBgBtn = document.getElementById("removeBgBtn");
-    var closeSettingsBtn = document.getElementById("closeSettingsBtn");
-    var BG_KEY = "lockscreen_bg_v1";
-
-    // Safari (in a plain browser tab, not installed to the home screen)
-    // colors its own status bar / address bar chrome from <body>'s literal
-    // background-color — it ignores whatever .screen actually paints on
-    // top — so without this, that chrome stays a fixed color and looks like
-    // a mismatched black bar across the top/bottom of any wallpaper. This
-    // samples the image down to a single average pixel and applies that as
-    // <body>'s background-color so the two match.
-    // averages just a thin slice off the top of the photo, not the whole
-    // image — the status bar sits right at the top edge, so that's the
-    // color that actually needs to match, and a photo that shifts tone
-    // top-to-bottom would otherwise average out to a color that matches
-    // neither end
-    function sampleTopSliceColor(source, sourceW, sourceH) {
-      var c = document.createElement("canvas");
-      c.width = 1;
-      c.height = 1;
-      var sctx = c.getContext("2d");
-      var sliceH = Math.max(1, Math.round(sourceH * 0.04));
-      sctx.drawImage(source, 0, 0, sourceW, sliceH, 0, 0, 1, 1);
-      var d = sctx.getImageData(0, 0, 1, 1).data;
-      return "rgb(" + d[0] + "," + d[1] + "," + d[2] + ")";
-    }
-
-    function matchBodyColorToImage(dataUrl) {
-      // re-decoding a large real photo from its own data URI a second time
-      // can silently fail to fire onload on some WebKit versions — used only
-      // as a fallback (e.g. reapplying a saved background on page load)
-      // when there's no already-decoded canvas to sample from directly
-      var sampler = new Image();
-      sampler.onload = function () {
-        try {
-          document.body.style.backgroundColor = sampleTopSliceColor(sampler, sampler.naturalWidth, sampler.naturalHeight);
-        } catch (err) {}
-      };
-      sampler.src = dataUrl;
-    }
-
-    function applyBackground(dataUrl, sourceCanvas) {
-      if (dataUrl) {
-        var img = "url(" + dataUrl + ")";
-        // .screen / .homescreen carry only a dark scrim now — the actual
-        // photo lives on <body> underneath instead (see the height/
-        // background-image comment on the body rule above), since that's
-        // what lets Safari's own chrome show real photo detail rather than
-        // a flat sampled color
-        var scrim = "linear-gradient(rgba(0,0,0,0.32), rgba(0,0,0,0.32))";
-        screenEl.style.backgroundImage = scrim;
-        homescreenEl.style.backgroundImage = scrim;
-        document.body.style.backgroundImage = img;
-        document.body.style.backgroundSize = "cover";
-        document.body.style.backgroundPosition = "center";
-        if (sourceCanvas) {
-          try {
-            document.body.style.backgroundColor = sampleTopSliceColor(sourceCanvas, sourceCanvas.width, sourceCanvas.height);
-          } catch (err) {}
-        } else {
-          matchBodyColorToImage(dataUrl);
-        }
-        settingsPreview.style.backgroundImage = img;
-        settingsPreview.textContent = "";
-      } else {
-        screenEl.style.backgroundImage = "";
-        homescreenEl.style.backgroundImage = "";
-        document.body.style.backgroundImage = "";
-        document.body.style.backgroundColor = "";
-        settingsPreview.style.backgroundImage = "";
-        settingsPreview.textContent = "No custom image set";
-      }
-    }
-
-    function openSettings() { settingsEl.classList.add("show"); }
-    function closeSettings() { settingsEl.classList.remove("show"); }
-
-    // ---- "unlock on attempt #" picker ----
-    var attemptPickerEl = document.getElementById("attemptPicker");
-    var attemptButtons = [];
-    for (var av = 1; av <= 5; av++) {
-      (function (n) {
-        var b = document.createElement("button");
-        b.type = "button";
-        b.textContent = n;
-        if (n === requiredAttempt) b.classList.add("active");
-        b.addEventListener("click", function () {
-          requiredAttempt = n;
-          attemptCount = 0;
-          try { localStorage.setItem(REQUIRED_ATTEMPT_KEY, n); } catch (e) {}
-          attemptButtons.forEach(function (btn) { btn.classList.remove("active"); });
-          b.classList.add("active");
-        });
-        attemptButtons.push(b);
-        attemptPickerEl.appendChild(b);
-      })(av);
-    }
-
-    closeSettingsBtn.addEventListener("click", closeSettings);
-    settingsEl.addEventListener("click", function (e) {
-      if (e.target === settingsEl) closeSettings();
-    });
-
-    removeBgBtn.addEventListener("click", function () {
-      try { localStorage.removeItem(BG_KEY); } catch (err) {}
-      applyBackground(null);
-      setTimeout(function () { location.href = location.href; }, 350);
-    });
-
-    // reads an image directly off the system clipboard on tap — more reliable
-    // on iPhone than the long-press "Paste" callout, since it runs as a direct
-    // user-gesture handler rather than depending on the OS text-selection UI
-    pasteBgBtn.addEventListener("click", function () {
-      if (!navigator.clipboard || !navigator.clipboard.read) {
-        alert("Clipboard access isn't available in this browser. Try long-pressing the screen and choosing Paste instead.");
-        return;
-      }
-      navigator.clipboard.read().then(function (items) {
-        for (var i = 0; i < items.length; i++) {
-          var type = items[i].types.filter(function (t) { return t.indexOf("image/") === 0; })[0];
-          if (type) {
-            items[i].getType(type).then(processBackgroundImageFile);
-            return;
-          }
-        }
-        alert("No image found on the clipboard. Copy a photo first, then try again.");
-      }).catch(function () {
-        alert("Couldn't read the clipboard. Make sure you copied an image, then try again.");
-      });
-    });
-
-    function processBackgroundImageFile(file) {
-      if (!file) return;
-      var reader = new FileReader();
-      reader.onload = function (ev) {
-        var img = new Image();
-        img.onload = function () {
-          var maxDim = 1400;
-          var scale = Math.min(1, maxDim / Math.max(img.width, img.height));
-          var canvas = document.createElement("canvas");
-          canvas.width = Math.round(img.width * scale);
-          canvas.height = Math.round(img.height * scale);
-          var ctx = canvas.getContext("2d");
-          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-          var out = canvas.toDataURL("image/jpeg", 0.82);
-          try { localStorage.setItem(BG_KEY, out); } catch (err) {}
-          applyBackground(out, canvas);
-          // Safari (in a plain browser tab) only picks the wallpaper color up
-          // for its own status bar / address bar chrome on a fresh page load,
-          // not from a live style change — reloading locks that match in
-          // immediately instead of leaving it mismatched until the next visit
-          setTimeout(function () { location.href = location.href; }, 350);
-        };
-        img.src = ev.target.result;
-      };
-      reader.readAsDataURL(file);
-    }
-
-    bgFileInput.addEventListener("change", function (e) {
-      var file = e.target.files && e.target.files[0];
-      if (!file) return;
-      processBackgroundImageFile(file);
-    });
-
-    // paste an image (e.g. copied from Photos/another app) anywhere on the
-    // page to use it as the wallpaper, without opening the settings sheet
-    document.addEventListener("paste", function (e) {
-      var items = (e.clipboardData && e.clipboardData.items) || [];
-      for (var i = 0; i < items.length; i++) {
-        if (items[i].type && items[i].type.indexOf("image") === 0) {
-          var file = items[i].getAsFile();
-          if (file) {
-            e.preventDefault();
-            processBackgroundImageFile(file);
-          }
-          break;
-        }
-      }
-    });
-
-    try {
-      var saved = localStorage.getItem(BG_KEY);
-      if (saved) applyBackground(saved);
-    } catch (err) {}
-
-    var gestureTracking = false;
-    var gestureTriggered = false;
-    var gestureStartY = 0;
-
-    window.addEventListener("touchstart", function (e) {
-      if (e.touches.length === 2) {
-        gestureTracking = true;
-        gestureTriggered = false;
-        gestureStartY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
-      } else {
-        gestureTracking = false;
-      }
-    }, { passive: true });
-
-    window.addEventListener("touchmove", function (e) {
-      if (!gestureTracking || gestureTriggered || e.touches.length !== 2) return;
-      var curY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
-      if (curY - gestureStartY > 70) {
-        gestureTriggered = true;
-        openSettings();
-      }
-    }, { passive: true });
-
-    window.addEventListener("touchend", function (e) {
-      if (e.touches.length < 2) gestureTracking = false;
-    }, { passive: true });
-  })();
-</script>
+  </script>
 </body>
 </html>
