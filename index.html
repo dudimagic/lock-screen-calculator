@@ -208,9 +208,11 @@
           setTimeout(function () { entered = ""; renderDots(); }, 900);
         }
       });
-      btn.addEventListener("pointerdown", function () { btn.classList.add("pressed"); });
-      ["pointerup", "pointerleave", "pointercancel"].forEach(function (evt) {
-        btn.addEventListener(evt, function () { btn.classList.remove("pressed"); });
+      ["pointerdown", "touchstart", "mousedown"].forEach(function (evt) {
+        btn.addEventListener(evt, function () { btn.classList.add("pressed"); }, { passive: true });
+      });
+      ["pointerup", "pointerleave", "pointercancel", "touchend", "touchcancel", "mouseup", "mouseleave"].forEach(function (evt) {
+        btn.addEventListener(evt, function () { btn.classList.remove("pressed"); }, { passive: true });
       });
     });
 
