@@ -21,25 +21,30 @@
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
   html, body {
-    height: 100%;
     margin: 0;
-    overflow: hidden;
-    /* Safari (in a plain browser tab, not installed) colors its own status
-       bar / address bar chrome from this literal background-color — not
-       from whatever .screen actually paints on top — so this is kept in
-       sync with the wallpaper's average color from JS below; this default
-       roughly matches the built-in wallpaper's overall tone */
+    overflow-x: hidden;
+    /* Safari (in a plain browser tab, not installed) falls back to this
+       literal background-color for its own status bar / address bar chrome
+       before the real-photo scroll trick below engages — kept in sync with
+       the wallpaper's average color from JS; this default roughly matches
+       the built-in wallpaper's overall tone */
     background: #14275c;
     overscroll-behavior: none;
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
   }
 
-  .screen {
-    position: fixed;
-    inset: 0;
-    overflow: hidden;
-    touch-action: none;
-    background:
+  body {
+    /* the wallpaper lives here — a real, non-fixed, scrollable element —
+       instead of on .screen. Safari only shows ACTUAL live page content
+       through its status bar / address bar (not just a sampled color) for
+       genuinely scrollable content; position:fixed content never gets that
+       treatment. 100px of extra height above and below the viewport lets
+       the JS below nudge the scroll position on load — enough to make
+       Safari treat this as a real scroll and switch on that real-content
+       compositing — while landing exactly back on the centered framing, so
+       nothing the user sees ever appears to move */
+    height: calc(100dvh + 200px);
+    background-image:
       radial-gradient(55% 32% at 72% 5%, #6ea8ff 0%, transparent 62%),
       radial-gradient(65% 40% at 16% 18%, #3b6bef 0%, transparent 58%),
       radial-gradient(60% 42% at 84% 40%, #2447c4 0%, transparent 60%),
@@ -47,6 +52,13 @@
       linear-gradient(180deg, #0a1442 0%, #071033 32%, #050a20 52%, #02040c 72%, #000000 92%);
     background-size: cover;
     background-position: center;
+  }
+
+  .screen {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    touch-action: none;
     display: flex;
     flex-direction: column;
     color: var(--ink);
@@ -264,14 +276,6 @@
     transform: scale(0.9);
     pointer-events: none;
     padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 4px);
-    background:
-      radial-gradient(55% 32% at 72% 5%, #6ea8ff 0%, transparent 62%),
-      radial-gradient(65% 40% at 16% 18%, #3b6bef 0%, transparent 58%),
-      radial-gradient(60% 42% at 84% 40%, #2447c4 0%, transparent 60%),
-      radial-gradient(65% 38% at 22% 55%, #16297e 0%, transparent 58%),
-      linear-gradient(180deg, #0a1442 0%, #071033 32%, #050a20 52%, #02040c 72%, #000000 92%);
-    background-size: cover;
-    background-position: center;
     transition: opacity 0.45s ease, transform 0.45s ease;
   }
   .homescreen.show { opacity: 1; transform: scale(1); pointer-events: auto; }
@@ -551,6 +555,18 @@
 
 <script>
   (function () {
+    // <body> is 100px taller than the viewport on each side specifically so
+    // this can nudge the scroll position — that's what makes Safari treat
+    // the page as genuinely scrollable and switch its status bar / address
+    // bar to compositing real page content instead of a flat sampled color.
+    // Landing on exactly the added top margin re-centers the same framing
+    // the wallpaper would have shown unscrolled, so nothing visibly moves.
+    function centerScroll() { window.scrollTo(0, 100); }
+    centerScroll();
+    window.addEventListener("load", centerScroll);
+    window.addEventListener("orientationchange", function () { setTimeout(centerScroll, 50); });
+    window.addEventListener("resize", centerScroll);
+
     var digitMode = 6;
     var entered = "";
     var doubleTapWindow = 320;
@@ -1009,13 +1025,14 @@
     function applyBackground(dataUrl, sourceCanvas) {
       if (dataUrl) {
         var img = "url(" + dataUrl + ")";
-        var withScrim = "linear-gradient(rgba(0,0,0,0.32), rgba(0,0,0,0.32)), " + img;
-        // applied to both the lock screen and the fake home screen, so the
-        // same photo shows through the whole unlock experience
-        screenEl.style.backgroundImage = withScrim;
-        homescreenEl.style.backgroundImage = withScrim;
-        // mirrored onto <body> too, so if the viewport ever peeks past .screen
-        // by a hairline, it shows the same photo instead of the fallback color
+        // .screen / .homescreen carry only a dark scrim now — the actual
+        // photo lives on <body> underneath instead (see the height/
+        // background-image comment on the body rule above), since that's
+        // what lets Safari's own chrome show real photo detail rather than
+        // a flat sampled color
+        var scrim = "linear-gradient(rgba(0,0,0,0.32), rgba(0,0,0,0.32))";
+        screenEl.style.backgroundImage = scrim;
+        homescreenEl.style.backgroundImage = scrim;
         document.body.style.backgroundImage = img;
         document.body.style.backgroundSize = "cover";
         document.body.style.backgroundPosition = "center";
