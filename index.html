@@ -1037,11 +1037,17 @@
       var sampler = new Image();
       sampler.onload = function () {
         try {
+          // average just a thin slice off the top of the photo, not the
+          // whole image — the status bar sits right at the top edge, so
+          // that's the color that actually needs to match, and a photo
+          // that shifts tone top-to-bottom would otherwise average out to
+          // a color that matches neither end
           var c = document.createElement("canvas");
           c.width = 1;
           c.height = 1;
           var sctx = c.getContext("2d");
-          sctx.drawImage(sampler, 0, 0, 1, 1);
+          var sliceH = Math.max(1, Math.round(sampler.naturalHeight * 0.04));
+          sctx.drawImage(sampler, 0, 0, sampler.naturalWidth, sliceH, 0, 0, 1, 1);
           var d = sctx.getImageData(0, 0, 1, 1).data;
           document.body.style.backgroundColor = "rgb(" + d[0] + "," + d[1] + "," + d[2] + ")";
         } catch (err) {}
