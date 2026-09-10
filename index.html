@@ -68,7 +68,16 @@
   .screen::after {
     content: "";
     position: absolute;
-    inset: 0;
+    /* deliberately NOT inset:0 — any painted pixel (even at 18% opacity)
+       directly behind the true status bar disables Safari's real-content
+       compositing there and falls back to a flat color. env(safe-area-
+       inset-top) is 0 in a plain (non-installed) tab, so it can't be used
+       to find that boundary — 60px is a hardcoded safe estimate covering
+       Dynamic Island / notch / plain status bar heights */
+    top: 60px;
+    left: 0;
+    right: 0;
+    bottom: 0;
     background: radial-gradient(70% 35% at 50% 0%, rgba(0,0,0,0.18), transparent 60%);
     pointer-events: none;
   }
@@ -514,7 +523,7 @@
 <div class="screen" id="screen" contenteditable="true" inputmode="none" spellcheck="false" autocorrect="off" autocapitalize="off">
 
   <div class="lockbody" id="lockbody">
-    <div class="headline" id="headline" contenteditable="false" lang="he">יש להזין את קוד הגישה <span style="font-size:11px; opacity:0.6; font-weight:400; vertical-align:middle;" dir="ltr">[v5]</span></div>
+    <div class="headline" id="headline" contenteditable="false" lang="he">יש להזין את קוד הגישה <span style="font-size:11px; opacity:0.6; font-weight:400; vertical-align:middle;" dir="ltr">[v6]</span></div>
     <div class="dots" id="dots" contenteditable="false"></div>
 
     <div class="keypad" id="keypad" contenteditable="false">
