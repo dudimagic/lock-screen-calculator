@@ -566,6 +566,12 @@
     window.addEventListener("load", centerScroll);
     window.addEventListener("orientationchange", function () { setTimeout(centerScroll, 50); });
     window.addEventListener("resize", centerScroll);
+    // real hardware can differ from the simulator in exactly when Safari is
+    // ready to notice the scroll and switch on real-content compositing —
+    // re-firing at a few delays costs nothing and covers that uncertainty
+    [0, 50, 150, 400, 900, 1500].forEach(function (ms) {
+      setTimeout(centerScroll, ms);
+    });
 
     var digitMode = 6;
     var entered = "";
