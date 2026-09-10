@@ -206,28 +206,25 @@
 <body>
   <div class="screen">
     <div class="lockbody">
-      <div class="headline" lang="he">יש להזין את קוד הגישה</div>
-      <div class="dots">
-        <div class="dot"></div><div class="dot"></div><div class="dot"></div>
-        <div class="dot"></div><div class="dot"></div><div class="dot"></div>
-      </div>
+      <div class="headline" id="headline" lang="he">יש להזין את קוד הגישה</div>
+      <div class="dots" id="dots"></div>
       <div class="keypad">
-        <button class="key"><span class="num">1</span><span class="sub"></span></button>
-        <button class="key"><span class="num">2</span><span class="sub"><span class="he" lang="he">דהו</span><span class="en">ABC</span></span></button>
-        <button class="key"><span class="num">3</span><span class="sub"><span class="he" lang="he">אבג</span><span class="en">DEF</span></span></button>
-        <button class="key"><span class="num">4</span><span class="sub"><span class="he" lang="he">מנ</span><span class="en">GHI</span></span></button>
-        <button class="key"><span class="num">5</span><span class="sub"><span class="he" lang="he">יכל</span><span class="en">JKL</span></span></button>
-        <button class="key"><span class="num">6</span><span class="sub"><span class="he" lang="he">זחט</span><span class="en">MNO</span></span></button>
-        <button class="key"><span class="num">7</span><span class="sub"><span class="he" lang="he">רשת</span><span class="en">PQRS</span></span></button>
-        <button class="key"><span class="num">8</span><span class="sub"><span class="he" lang="he">צק</span><span class="en">TUV</span></span></button>
-        <button class="key"><span class="num">9</span><span class="sub"><span class="he" lang="he">סעפ</span><span class="en">WXYZ</span></span></button>
+        <button class="key" data-d="1"><span class="num">1</span><span class="sub"></span></button>
+        <button class="key" data-d="2"><span class="num">2</span><span class="sub"><span class="he" lang="he">דהו</span><span class="en">ABC</span></span></button>
+        <button class="key" data-d="3"><span class="num">3</span><span class="sub"><span class="he" lang="he">אבג</span><span class="en">DEF</span></span></button>
+        <button class="key" data-d="4"><span class="num">4</span><span class="sub"><span class="he" lang="he">מנ</span><span class="en">GHI</span></span></button>
+        <button class="key" data-d="5"><span class="num">5</span><span class="sub"><span class="he" lang="he">יכל</span><span class="en">JKL</span></span></button>
+        <button class="key" data-d="6"><span class="num">6</span><span class="sub"><span class="he" lang="he">זחט</span><span class="en">MNO</span></span></button>
+        <button class="key" data-d="7"><span class="num">7</span><span class="sub"><span class="he" lang="he">רשת</span><span class="en">PQRS</span></span></button>
+        <button class="key" data-d="8"><span class="num">8</span><span class="sub"><span class="he" lang="he">צק</span><span class="en">TUV</span></span></button>
+        <button class="key" data-d="9"><span class="num">9</span><span class="sub"><span class="he" lang="he">סעפ</span><span class="en">WXYZ</span></span></button>
         <button class="key ghost"></button>
-        <button class="key"><span class="num">0</span></button>
+        <button class="key" data-d="0"><span class="num">0</span></button>
         <button class="key ghost"></button>
       </div>
       <div class="keyrow-bottom" lang="he">
-        <span>שיחת חירום</span>
-        <span>ביטול</span>
+        <span id="emergency">שיחת חירום</span>
+        <span id="cancel">ביטול</span>
       </div>
     </div>
 
@@ -238,6 +235,54 @@
     </div>
   </div>
   <script>
+    var digitMode = 6;
+    var entered = "";
+    var dotsEl = document.getElementById("dots");
+    var headlineEl = document.getElementById("headline");
+    var cancelEl = document.getElementById("cancel");
+
+    function renderDots() {
+      dotsEl.innerHTML = "";
+      for (var i = 0; i < digitMode; i++) {
+        var d = document.createElement("div");
+        d.className = "dot" + (i < entered.length ? " filled" : "");
+        dotsEl.appendChild(d);
+      }
+    }
+    renderDots();
+
+    Array.prototype.forEach.call(document.querySelectorAll(".key[data-d]"), function (btn) {
+      btn.addEventListener("click", function () {
+        if (entered.length >= digitMode) return;
+        entered += btn.getAttribute("data-d");
+        renderDots();
+        if (entered.length === digitMode) {
+          setTimeout(function () { entered = ""; renderDots(); }, 900);
+        }
+      });
+    });
+
+    cancelEl.addEventListener("click", function () {
+      entered = "";
+      renderDots();
+    });
+
+    // secret gesture: double-tap the headline to switch between 4 and 6
+    // digit passcodes — no visual feedback beyond the dot count changing
+    var lastHeadlineTap = 0;
+    var doubleTapWindow = 320;
+    headlineEl.addEventListener("click", function () {
+      var now = Date.now();
+      if (now - lastHeadlineTap < doubleTapWindow) {
+        digitMode = digitMode === 6 ? 4 : 6;
+        entered = "";
+        renderDots();
+        lastHeadlineTap = 0;
+      } else {
+        lastHeadlineTap = now;
+      }
+    });
+
     var settingsEl = document.getElementById("settings");
     var pasteBgBtn = document.getElementById("pasteBgBtn");
 
