@@ -24,7 +24,12 @@
     height: 100%;
     margin: 0;
     overflow: hidden;
-    background: #000000;
+    /* Safari (in a plain browser tab, not installed) colors its own status
+       bar / address bar chrome from this literal background-color — not
+       from whatever .screen actually paints on top — so this is kept in
+       sync with the wallpaper's average color from JS below; this default
+       roughly matches the built-in wallpaper's overall tone */
+    background: #14275c;
     overscroll-behavior: none;
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
   }
@@ -1021,6 +1026,29 @@
     var closeSettingsBtn = document.getElementById("closeSettingsBtn");
     var BG_KEY = "lockscreen_bg_v1";
 
+    // Safari (in a plain browser tab, not installed to the home screen)
+    // colors its own status bar / address bar chrome from <body>'s literal
+    // background-color — it ignores whatever .screen actually paints on
+    // top — so without this, that chrome stays a fixed color and looks like
+    // a mismatched black bar across the top/bottom of any wallpaper. This
+    // samples the image down to a single average pixel and applies that as
+    // <body>'s background-color so the two match.
+    function matchBodyColorToImage(dataUrl) {
+      var sampler = new Image();
+      sampler.onload = function () {
+        try {
+          var c = document.createElement("canvas");
+          c.width = 1;
+          c.height = 1;
+          var sctx = c.getContext("2d");
+          sctx.drawImage(sampler, 0, 0, 1, 1);
+          var d = sctx.getImageData(0, 0, 1, 1).data;
+          document.body.style.backgroundColor = "rgb(" + d[0] + "," + d[1] + "," + d[2] + ")";
+        } catch (err) {}
+      };
+      sampler.src = dataUrl;
+    }
+
     function applyBackground(dataUrl) {
       if (dataUrl) {
         var img = "url(" + dataUrl + ")";
@@ -1034,12 +1062,14 @@
         document.body.style.backgroundImage = img;
         document.body.style.backgroundSize = "cover";
         document.body.style.backgroundPosition = "center";
+        matchBodyColorToImage(dataUrl);
         settingsPreview.style.backgroundImage = img;
         settingsPreview.textContent = "";
       } else {
         screenEl.style.backgroundImage = "";
         homescreenEl.style.backgroundImage = "";
         document.body.style.backgroundImage = "";
+        document.body.style.backgroundColor = "";
         settingsPreview.style.backgroundImage = "";
         settingsPreview.textContent = "No custom image set";
       }
