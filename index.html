@@ -149,10 +149,14 @@
   }
   .keyrow-bottom span { opacity: 0.92; cursor: pointer; }
 
+  .screen {
+    transition: transform 0.45s cubic-bezier(.36,.66,.04,1), opacity 0.35s ease-out, filter 0.35s ease-out;
+    transform-origin: center center;
+  }
   .screen.unlocking {
-    transition: transform 0.55s cubic-bezier(.32,.72,0,1), opacity 0.45s ease 0.1s;
-    transform: translateY(-100%);
-    opacity: 0.4;
+    transform: scale(0.88) translateY(-3%);
+    opacity: 0;
+    filter: blur(10px);
     pointer-events: none;
   }
   body.unlocked-bg { background-color: #ffffff !important; background-image: none !important; }
@@ -165,10 +169,15 @@
     background: #ffffff;
     color: rgba(0,0,0,0.87);
     font-family: Arial, "Helvetica Neue", sans-serif;
+    opacity: 0;
+    transform: scale(1.06);
+    filter: blur(6px);
+    transition: opacity 0.4s ease-out 0.08s, transform 0.5s cubic-bezier(.22,1,.36,1) 0.08s, filter 0.4s ease-out 0.08s;
     direction: ltr;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
   }
+  .homescreen.visible { opacity: 1; transform: scale(1); filter: blur(0); }
   .g-page { padding: calc(env(safe-area-inset-top, 0px) + 20px) 18px 40px; max-width: 480px; margin: 0 auto; }
   .g-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 30px; }
   .g-top-left, .g-top-right { display: flex; align-items: center; gap: 20px; }
@@ -283,8 +292,10 @@
 
     function unlockPhone() {
       homescreenEl.style.display = "block";
+      void homescreenEl.offsetWidth;
       document.body.classList.add("unlocked-bg");
       screenEl.classList.add("unlocking");
+      homescreenEl.classList.add("visible");
     }
 
     function renderDots() {
