@@ -263,7 +263,7 @@
     });
 
     cancelEl.addEventListener("click", function () {
-      entered = "";
+      entered = entered.slice(0, -1);
       renderDots();
     });
 
