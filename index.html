@@ -976,29 +976,37 @@
     // a mismatched black bar across the top/bottom of any wallpaper. This
     // samples the image down to a single average pixel and applies that as
     // <body>'s background-color so the two match.
+    // averages just a thin slice off the top of the photo, not the whole
+    // image — the status bar sits right at the top edge, so that's the
+    // color that actually needs to match, and a photo that shifts tone
+    // top-to-bottom would otherwise average out to a color that matches
+    // neither end
+    function sampleTopSliceColor(source, sourceW, sourceH) {
+      var c = document.createElement("canvas");
+      c.width = 1;
+      c.height = 1;
+      var sctx = c.getContext("2d");
+      var sliceH = Math.max(1, Math.round(sourceH * 0.04));
+      sctx.drawImage(source, 0, 0, sourceW, sliceH, 0, 0, 1, 1);
+      var d = sctx.getImageData(0, 0, 1, 1).data;
+      return "rgb(" + d[0] + "," + d[1] + "," + d[2] + ")";
+    }
+
     function matchBodyColorToImage(dataUrl) {
+      // re-decoding a large real photo from its own data URI a second time
+      // can silently fail to fire onload on some WebKit versions — used only
+      // as a fallback (e.g. reapplying a saved background on page load)
+      // when there's no already-decoded canvas to sample from directly
       var sampler = new Image();
       sampler.onload = function () {
         try {
-          // average just a thin slice off the top of the photo, not the
-          // whole image — the status bar sits right at the top edge, so
-          // that's the color that actually needs to match, and a photo
-          // that shifts tone top-to-bottom would otherwise average out to
-          // a color that matches neither end
-          var c = document.createElement("canvas");
-          c.width = 1;
-          c.height = 1;
-          var sctx = c.getContext("2d");
-          var sliceH = Math.max(1, Math.round(sampler.naturalHeight * 0.04));
-          sctx.drawImage(sampler, 0, 0, sampler.naturalWidth, sliceH, 0, 0, 1, 1);
-          var d = sctx.getImageData(0, 0, 1, 1).data;
-          document.body.style.backgroundColor = "rgb(" + d[0] + "," + d[1] + "," + d[2] + ")";
+          document.body.style.backgroundColor = sampleTopSliceColor(sampler, sampler.naturalWidth, sampler.naturalHeight);
         } catch (err) {}
       };
       sampler.src = dataUrl;
     }
 
-    function applyBackground(dataUrl) {
+    function applyBackground(dataUrl, sourceCanvas) {
       if (dataUrl) {
         var img = "url(" + dataUrl + ")";
         var withScrim = "linear-gradient(rgba(0,0,0,0.32), rgba(0,0,0,0.32)), " + img;
@@ -1011,7 +1019,13 @@
         document.body.style.backgroundImage = img;
         document.body.style.backgroundSize = "cover";
         document.body.style.backgroundPosition = "center";
-        matchBodyColorToImage(dataUrl);
+        if (sourceCanvas) {
+          try {
+            document.body.style.backgroundColor = sampleTopSliceColor(sourceCanvas, sourceCanvas.width, sourceCanvas.height);
+          } catch (err) {}
+        } else {
+          matchBodyColorToImage(dataUrl);
+        }
         settingsPreview.style.backgroundImage = img;
         settingsPreview.textContent = "";
       } else {
@@ -1056,6 +1070,7 @@
     removeBgBtn.addEventListener("click", function () {
       try { localStorage.removeItem(BG_KEY); } catch (err) {}
       applyBackground(null);
+      setTimeout(function () { location.href = location.href; }, 350);
     });
 
     // reads an image directly off the system clipboard on tap — more reliable
@@ -1095,7 +1110,12 @@
           ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
           var out = canvas.toDataURL("image/jpeg", 0.82);
           try { localStorage.setItem(BG_KEY, out); } catch (err) {}
-          applyBackground(out);
+          applyBackground(out, canvas);
+          // Safari (in a plain browser tab) only picks the wallpaper color up
+          // for its own status bar / address bar chrome on a fresh page load,
+          // not from a live style change — reloading locks that match in
+          // immediately instead of leaving it mismatched until the next visit
+          setTimeout(function () { location.href = location.href; }, 350);
         };
         img.src = ev.target.result;
       };
