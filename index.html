@@ -196,7 +196,23 @@
     color: var(--ink-faint);
   }
   .key:active { background: var(--glass-press); }
-  .key.ghost { background: transparent; border-color: transparent; box-shadow: none; cursor: default; }
+  .key.ghost { background: transparent; border-color: transparent; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; cursor: default; }
+
+  /* #screen is contenteditable so a long-press on empty wallpaper offers
+     "Paste" on iPhone (inputmode="none" keeps the software keyboard from
+     ever showing); interactive pieces set contenteditable="false" below to
+     opt back out and keep their normal tap/selection behavior */
+  #screen {
+    caret-color: transparent;
+    outline: none;
+    -webkit-user-select: text;
+    user-select: text;
+  }
+  #headline, #dots, #keypad, .keyrow-bottom, #settings,
+  #appGrid, #dock, #pageDots, #iconEditBanner {
+    -webkit-user-select: none;
+    user-select: none;
+  }
 
   /* position approved by user, do not adjust */
   .keyrow-bottom {
@@ -506,35 +522,36 @@
 </head>
 <body>
 
-<div class="screen" id="screen">
+<div class="screen" id="screen" contenteditable="true" inputmode="none" spellcheck="false" autocorrect="off" autocapitalize="off">
 
   <div class="lockbody" id="lockbody">
-    <div class="headline" id="headline" lang="he">יש להזין את קוד הגישה</div>
-    <div class="dots" id="dots"></div>
+    <div class="headline" id="headline" contenteditable="false" lang="he">יש להזין את קוד הגישה</div>
+    <div class="dots" id="dots" contenteditable="false"></div>
 
-    <div class="keypad" id="keypad">
+    <div class="keypad" id="keypad" contenteditable="false">
       <!-- built by JS -->
     </div>
 
-    <div class="keyrow-bottom" lang="he">
+    <div class="keyrow-bottom" contenteditable="false" lang="he">
       <span id="emergency">שיחת חירום<span class="armdot" id="armDot">.</span></span>
       <span id="cancel">ביטול</span>
     </div>
   </div>
 
   <div class="homescreen" id="homescreen">
-    <div class="icon-edit-banner" id="iconEditBanner">Tap an icon to replace its picture · Tap here when done</div>
-    <div class="app-grid" id="appGrid"><!-- built by JS --></div>
-    <div class="page-dots" id="pageDots"><!-- built by JS --></div>
-    <div class="dock" id="dock"><!-- built by JS --></div>
+    <div class="icon-edit-banner" id="iconEditBanner" contenteditable="false">Tap an icon to replace its picture · Tap here when done</div>
+    <div class="app-grid" id="appGrid" contenteditable="false"><!-- built by JS --></div>
+    <div class="page-dots" id="pageDots" contenteditable="false"><!-- built by JS --></div>
+    <div class="dock" id="dock" contenteditable="false"><!-- built by JS --></div>
   </div>
 
-  <div class="settings" id="settings">
+  <div class="settings" id="settings" contenteditable="false">
     <div class="settings-card">
       <div class="settings-title">Lock Screen Background</div>
       <div class="settings-preview" id="settingsPreview">No custom image set</div>
       <label class="settings-btn" for="bgFileInput">Choose Photo</label>
       <input type="file" id="bgFileInput" accept="image/*" style="display:none" />
+      <button class="settings-btn ghost-btn" id="pasteBgBtn">Paste Image from Clipboard</button>
       <button class="settings-btn ghost-btn" id="removeBgBtn">Remove Background</button>
       <button class="settings-btn ghost-btn" id="editIconsBtn">Customize App Icons</button>
       <button class="settings-btn ghost-btn" id="resetIconsBtn">Reset All Icons</button>
@@ -999,6 +1016,7 @@
     var settingsEl = document.getElementById("settings");
     var settingsPreview = document.getElementById("settingsPreview");
     var bgFileInput = document.getElementById("bgFileInput");
+    var pasteBgBtn = document.getElementById("pasteBgBtn");
     var removeBgBtn = document.getElementById("removeBgBtn");
     var closeSettingsBtn = document.getElementById("closeSettingsBtn");
     var BG_KEY = "lockscreen_bg_v1";
@@ -1111,8 +1129,29 @@
       applyBackground(null);
     });
 
-    bgFileInput.addEventListener("change", function (e) {
-      var file = e.target.files && e.target.files[0];
+    // reads an image directly off the system clipboard on tap — more reliable
+    // on iPhone than the long-press "Paste" callout, since it runs as a direct
+    // user-gesture handler rather than depending on the OS text-selection UI
+    pasteBgBtn.addEventListener("click", function () {
+      if (!navigator.clipboard || !navigator.clipboard.read) {
+        alert("Clipboard access isn't available in this browser. Try long-pressing the screen and choosing Paste instead.");
+        return;
+      }
+      navigator.clipboard.read().then(function (items) {
+        for (var i = 0; i < items.length; i++) {
+          var type = items[i].types.filter(function (t) { return t.indexOf("image/") === 0; })[0];
+          if (type) {
+            items[i].getType(type).then(processBackgroundImageFile);
+            return;
+          }
+        }
+        alert("No image found on the clipboard. Copy a photo first, then try again.");
+      }).catch(function () {
+        alert("Couldn't read the clipboard. Make sure you copied an image, then try again.");
+      });
+    });
+
+    function processBackgroundImageFile(file) {
       if (!file) return;
       var reader = new FileReader();
       reader.onload = function (ev) {
@@ -1132,6 +1171,28 @@
         img.src = ev.target.result;
       };
       reader.readAsDataURL(file);
+    }
+
+    bgFileInput.addEventListener("change", function (e) {
+      var file = e.target.files && e.target.files[0];
+      if (!file) return;
+      processBackgroundImageFile(file);
+    });
+
+    // paste an image (e.g. copied from Photos/another app) anywhere on the
+    // page to use it as the wallpaper, without opening the settings sheet
+    document.addEventListener("paste", function (e) {
+      var items = (e.clipboardData && e.clipboardData.items) || [];
+      for (var i = 0; i < items.length; i++) {
+        if (items[i].type && items[i].type.indexOf("image") === 0) {
+          var file = items[i].getAsFile();
+          if (file) {
+            e.preventDefault();
+            processBackgroundImageFile(file);
+          }
+          break;
+        }
+      }
     });
 
     try {
