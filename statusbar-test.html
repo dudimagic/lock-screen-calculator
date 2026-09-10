@@ -12,14 +12,8 @@
   }
   body {
     height: calc(100dvh + 200px);
-    background-image:
-      linear-gradient(45deg, #000 25%, transparent 25%),
-      linear-gradient(-45deg, #000 25%, transparent 25%),
-      linear-gradient(45deg, transparent 75%, #000 75%),
-      linear-gradient(-45deg, transparent 75%, #000 75%);
-    background-size: 60px 60px;
-    background-position: 0 0, 0 30px, 30px -30px, -30px 0px;
-    background-color: #fff;
+    background-image: linear-gradient(90deg, #ff0000 0%, #ff0000 50%, #003cff 50%, #003cff 100%);
+    background-color: #808080;
   }
   .note {
     position: fixed;
@@ -42,6 +36,6 @@
 </script>
 </head>
 <body>
-  <div class="note">If the checkerboard is unbroken through the very top status bar (clock/wifi/battery row), it's working. If that strip is a flat gray instead, it isn't.</div>
+  <div class="note">Left half red, right half blue, hard vertical line down the middle. If the status bar and bottom bar both show red-left/blue-right split too, it's working. If either is a single flat color (no split), it isn't.</div>
 </body>
 </html>
