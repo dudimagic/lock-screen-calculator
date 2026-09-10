@@ -523,7 +523,7 @@
 <div class="screen" id="screen" contenteditable="true" inputmode="none" spellcheck="false" autocorrect="off" autocapitalize="off">
 
   <div class="lockbody" id="lockbody">
-    <div class="headline" id="headline" contenteditable="false" lang="he">יש להזין את קוד הגישה <span style="font-size:11px; opacity:0.6; font-weight:400; vertical-align:middle;" dir="ltr">[v6]</span></div>
+    <div class="headline" id="headline" contenteditable="false" lang="he">יש להזין את קוד הגישה <span style="font-size:11px; opacity:0.6; font-weight:400; vertical-align:middle;" dir="ltr">[v8 scrollY=<span id="scrollDebug">?</span>]</span></div>
     <div class="dots" id="dots" contenteditable="false"></div>
 
     <div class="keypad" id="keypad" contenteditable="false">
@@ -581,6 +581,12 @@
     [0, 50, 150, 400, 900, 1500].forEach(function (ms) {
       setTimeout(centerScroll, ms);
     });
+    // TEMP DEBUG: proves the automatic (non-touch) scroll is actually
+    // happening — shows the live window.scrollY value on screen
+    setInterval(function () {
+      var el = document.getElementById("scrollDebug");
+      if (el) el.textContent = window.scrollY;
+    }, 200);
 
     var digitMode = 6;
     var entered = "";
