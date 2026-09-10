@@ -158,42 +158,6 @@
     text-shadow: 0 1px 8px rgba(0,0,0,0.25);
   }
   .keyrow-bottom span { opacity: 0.92; cursor: pointer; }
-
-  .settings {
-    position: absolute;
-    inset: 0;
-    z-index: 20;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(0,0,0,0.55);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.2s ease;
-  }
-  .settings.show { opacity: 1; pointer-events: auto; }
-  .settings-card {
-    width: min(84vw, 360px);
-    padding: 22px;
-    border-radius: 20px;
-    background: rgba(28,22,26,0.92);
-    backdrop-filter: blur(24px) saturate(180%);
-    -webkit-backdrop-filter: blur(24px) saturate(180%);
-  }
-  .settings-btn {
-    display: block;
-    width: 100%;
-    padding: 14px;
-    border-radius: 14px;
-    border: none;
-    background: rgba(255,255,255,0.14);
-    color: #fff;
-    font-size: 16px;
-    font-weight: 600;
-    text-align: center;
-    cursor: pointer;
-  }
-  .settings-btn:active { background: rgba(255,255,255,0.28); }
 </style>
 <script>
   function centerScroll() { window.scrollTo(0, 100); }
@@ -225,12 +189,6 @@
       <div class="keyrow-bottom" lang="he">
         <span id="emergency">שיחת חירום</span>
         <span id="cancel">ביטול</span>
-      </div>
-    </div>
-
-    <div class="settings" id="settings">
-      <div class="settings-card">
-        <button class="settings-btn" id="pasteBgBtn">Paste Image from Clipboard</button>
       </div>
     </div>
   </div>
@@ -283,39 +241,20 @@
       }
     });
 
-    var settingsEl = document.getElementById("settings");
-    var pasteBgBtn = document.getElementById("pasteBgBtn");
+    var emergencyEl = document.getElementById("emergency");
 
-    function openSettings() { settingsEl.classList.add("show"); }
-    function closeSettings() { settingsEl.classList.remove("show"); }
-    settingsEl.addEventListener("click", function (e) {
-      if (e.target === settingsEl) closeSettings();
-    });
-
-    // secret gesture: two-finger swipe down opens the paste panel
-    var gestureTracking = false;
-    var gestureTriggered = false;
-    var gestureStartY = 0;
-    window.addEventListener("touchstart", function (e) {
-      if (e.touches.length === 2) {
-        gestureTracking = true;
-        gestureTriggered = false;
-        gestureStartY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+    // secret gesture: double-tap "Emergency Call" to paste the clipboard
+    // image straight onto the wallpaper — no visible panel or button
+    var lastEmergencyTap = 0;
+    emergencyEl.addEventListener("click", function () {
+      var now = Date.now();
+      if (now - lastEmergencyTap < doubleTapWindow) {
+        lastEmergencyTap = 0;
+        triggerPaste();
       } else {
-        gestureTracking = false;
+        lastEmergencyTap = now;
       }
-    }, { passive: true });
-    window.addEventListener("touchmove", function (e) {
-      if (!gestureTracking || gestureTriggered || e.touches.length !== 2) return;
-      var curY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
-      if (curY - gestureStartY > 70) {
-        gestureTriggered = true;
-        openSettings();
-      }
-    }, { passive: true });
-    window.addEventListener("touchend", function (e) {
-      if (e.touches.length < 2) gestureTracking = false;
-    }, { passive: true });
+    });
 
     function applyBackgroundImage(dataUrl) {
       document.body.style.backgroundImage = dataUrl;
@@ -338,14 +277,13 @@
           var ctx = canvas.getContext("2d");
           ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
           applyBackgroundImage("url(" + canvas.toDataURL("image/jpeg", 0.82) + ")");
-          closeSettings();
         };
         img.src = ev.target.result;
       };
       reader.readAsDataURL(file);
     }
 
-    pasteBgBtn.addEventListener("click", function () {
+    function triggerPaste() {
       if (!navigator.clipboard || !navigator.clipboard.read) {
         alert("Clipboard access isn't available in this browser.");
         return;
@@ -362,7 +300,7 @@
       }).catch(function () {
         alert("Couldn't read the clipboard. Make sure you copied an image, then try again.");
       });
-    });
+    }
 
     try {
       var saved = localStorage.getItem("lockscreen_bg_v1");
