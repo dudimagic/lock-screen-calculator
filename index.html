@@ -129,7 +129,7 @@
     letter-spacing: 1.5px;
     color: var(--ink-faint);
   }
-  .key:active { background: var(--glass-press); }
+  .key.pressed { background: var(--glass-press); box-shadow: inset 0 1px 1.5px rgba(255,255,255,0.6), inset 0 -1px 1px rgba(255,255,255,0.1); transition: background 0.05s ease, box-shadow 0.05s ease; }
   .key.ghost { background: transparent; border-color: transparent; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; cursor: default; }
 
   .keyrow-bottom {
@@ -207,6 +207,10 @@
         if (entered.length === digitMode) {
           setTimeout(function () { entered = ""; renderDots(); }, 900);
         }
+      });
+      btn.addEventListener("pointerdown", function () { btn.classList.add("pressed"); });
+      ["pointerup", "pointerleave", "pointercancel"].forEach(function (evt) {
+        btn.addEventListener(evt, function () { btn.classList.remove("pressed"); });
       });
     });
 
