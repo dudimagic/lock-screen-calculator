@@ -129,7 +129,8 @@
     backdrop-filter: blur(18px) brightness(1.25) saturate(70%);
     -webkit-backdrop-filter: blur(18px) brightness(1.25) saturate(70%);
     box-shadow: inset 0 1px 1.5px rgba(255,255,255,0.45), inset 0 -1px 1px rgba(255,255,255,0.06);
-    transition: background 0.2s ease, box-shadow 0.2s ease;
+    transform: scale(1);
+    transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
   .key .num { color: #ffffff; }
   .key .sub {
@@ -152,7 +153,7 @@
     letter-spacing: 1.5px;
     color: #ffffff;
   }
-  .key.pressed, .key:active { background: var(--glass-press); box-shadow: inset 0 1px 1.5px rgba(255,255,255,0.6), inset 0 -1px 1px rgba(255,255,255,0.1); transition: background 0.05s ease, box-shadow 0.05s ease; }
+  .key.pressed, .key:active { background: var(--glass-press); box-shadow: inset 0 1px 1.5px rgba(255,255,255,0.6), inset 0 -1px 1px rgba(255,255,255,0.1); transform: scale(1.12); transition: background 0.05s ease, box-shadow 0.05s ease, transform 0.08s ease-out; }
   .key.ghost { background: transparent; border-color: transparent; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; cursor: default; }
 
   .keyrow-bottom {
