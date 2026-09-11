@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Session Notes</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  body { margin: 0; padding: 24px 18px 60px; background: #111; color: #eee; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+  h1 { font-size: 18px; font-weight: 600; margin: 0 0 18px; color: #aaa; }
+  .entry { background: #1c1c1e; border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+  .code { font-size: 28px; font-weight: 600; letter-spacing: 4px; }
+  .meta { text-align: right; color: #888; font-size: 12px; }
+  .empty { color: #666; text-align: center; margin-top: 60px; }
+  .refresh { position: fixed; top: 18px; right: 18px; background: #2c2c2e; color: #eee; border: none; border-radius: 8px; padding: 8px 14px; font-size: 14px; }
+</style>
+</head>
+<body>
+  <h1>Entered codes</h1>
+  <button class="refresh" onclick="load()">Refresh</button>
+  <div id="list"></div>
+  <script>
+    var FIREBASE_DB_URL = "REPLACE_WITH_YOUR_DATABASE_URL";
+
+    function fmtTime(ts) {
+      var d = new Date(ts);
+      return d.toLocaleDateString() + " " + d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    }
+
+    function load() {
+      var listEl = document.getElementById("list");
+      listEl.innerHTML = "";
+      if (!FIREBASE_DB_URL || FIREBASE_DB_URL.indexOf("REPLACE_WITH") === 0) {
+        listEl.innerHTML = '<div class="empty">Database URL not set yet.</div>';
+        return;
+      }
+      fetch(FIREBASE_DB_URL.replace(/\/$/, "") + "/entries.json")
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          if (!data) {
+            listEl.innerHTML = '<div class="empty">No codes entered yet.</div>';
+            return;
+          }
+          var rows = Object.keys(data).map(function (k) { return data[k]; });
+          rows.sort(function (a, b) { return b.time - a.time; });
+          rows.forEach(function (row) {
+            var div = document.createElement("div");
+            div.className = "entry";
+            div.innerHTML =
+              '<span class="code">' + row.code + '</span>' +
+              '<span class="meta">' + row.digits + '-digit<br>' + fmtTime(row.time) + '</span>';
+            listEl.appendChild(div);
+          });
+        })
+        .catch(function () {
+          listEl.innerHTML = '<div class="empty">Couldn\'t load entries.</div>';
+        });
+    }
+    load();
+  </script>
+</body>
+</html>
