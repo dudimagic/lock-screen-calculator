@@ -202,14 +202,15 @@
     -webkit-overflow-scrolling: touch;
   }
   .homescreen.visible { opacity: 1; transform: scale(1); filter: blur(0); }
-  .g-page { padding: calc(env(safe-area-inset-top, 0px) + 20px) 30px 40px; max-width: 480px; margin: 0 auto; }
+  .g-page { padding: calc(env(safe-area-inset-top, 0px) + 20px) 46px 40px; max-width: 420px; margin: 0 auto; }
   .g-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 30px; }
   .g-top-left, .g-top-right { display: flex; align-items: center; gap: 20px; }
   .g-signin { background: #0b57d0; color: #fff; border: none; border-radius: 20px; padding: 9px 22px; font-size: 15px; font-weight: 500; cursor: pointer; font-family: inherit; }
   .g-tab { font-size: 15px; color: rgba(0,0,0,0.65); position: relative; padding-bottom: 16px; }
   .g-tab-active { color: #0b57d0; font-weight: 500; }
   .g-tab-active::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: #0b57d0; border-radius: 2px; }
-  .g-logo { text-align: center; font-size: 60px; font-weight: 500; letter-spacing: -1px; margin: 22px 0 30px; user-select: none; }
+  .g-logo { text-align: center; margin: 22px 0 30px; user-select: none; }
+  .g-logo svg { width: 192px; height: auto; }
   .g-search { display: flex; align-items: center; gap: 14px; border: 1px solid #dfe1e5; border-radius: 26px; padding: 12px 18px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
   .g-search-flex { flex: 1 1 auto; }
   .g-ai-icon { position: relative; display: inline-flex; }
@@ -217,7 +218,7 @@
   .g-lang { text-align: center; font-size: 13px; color: rgba(0,0,0,0.6); margin: 22px 0 36px; }
   .g-lang a { color: #0b57d0; text-decoration: none; margin: 0 4px; }
   .g-trend-title { font-size: 21px; font-weight: 400; text-align: right; margin-bottom: 14px; }
-  .g-trend-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 17px 4px; border-bottom: 1px solid #ececec; font-size: 17px; }
+  .g-trend-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 17px 4px; border-bottom: 1px solid #ececec; font-size: 15px; }
   .g-trend-item:last-child { border-bottom: none; }
   .g-trend-item span { text-align: right; flex: 1 1 auto; }
   .g-bottombar { margin: 30px -30px 0; background: #f2f2f2; color: rgba(0,0,0,0.6); font-size: 13px; padding: 16px 30px calc(env(safe-area-inset-bottom, 0px) + 16px); display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; text-align: center; }
@@ -280,7 +281,14 @@
       </div>
 
       <div class="g-logo">
-        <span style="color:#4285F4">G</span><span style="color:#EA4335">o</span><span style="color:#FBBC05">o</span><span style="color:#4285F4">g</span><span style="color:#34A853">l</span><span style="color:#EA4335">e</span>
+        <svg viewBox="0 0 272 92" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Google">
+          <path fill="#EA4335" d="M115.75 47.18c0 12.77-9.99 22.18-22.25 22.18s-22.25-9.41-22.25-22.18C71.25 34.32 81.24 25 93.5 25s22.25 9.32 22.25 22.18zm-9.74 0c0-7.98-5.79-13.44-12.51-13.44S80.99 39.2 80.99 47.18c0 7.9 5.79 13.44 12.51 13.44s12.51-5.55 12.51-13.44z"/>
+          <path fill="#FBBC05" d="M162.75 47.18c0 12.77-9.99 22.18-22.25 22.18s-22.25-9.41-22.25-22.18c0-12.85 9.99-22.18 22.25-22.18s22.25 9.32 22.25 22.18zm-9.74 0c0-7.98-5.79-13.44-12.51-13.44s-12.51 5.46-12.51 13.44c0 7.9 5.79 13.44 12.51 13.44s12.51-5.55 12.51-13.44z"/>
+          <path fill="#4285F4" d="M207.98 26.42v39.72c0 16.34-9.64 23.02-21.03 23.02-10.73 0-17.19-7.18-19.62-13.06l8.48-3.53c1.51 3.61 5.21 7.87 11.13 7.87 7.29 0 11.8-4.51 11.8-12.98v-3.19h-.34c-2.17 2.68-6.36 5.02-11.64 5.02-11.05 0-21.17-9.63-21.17-22.01 0-12.47 10.12-22.18 21.17-22.18 5.27 0 9.46 2.34 11.64 4.94h.34v-3.61h9.24zm-8.55 20.85c0-7.81-5.21-13.53-11.84-13.53-6.72 0-12.35 5.72-12.35 13.53 0 7.73 5.63 13.36 12.35 13.36 6.63 0 11.84-5.63 11.84-13.36z"/>
+          <path fill="#34A853" d="M223 3v65h-9.5V3h9.5z"/>
+          <path fill="#EA4335" d="M259.6 54.42l7.56 5.04c-2.44 3.61-8.32 9.83-18.48 9.83-12.6 0-22.01-9.74-22.01-22.18 0-13.19 9.49-22.18 20.92-22.18 11.51 0 17.14 9.16 18.98 14.11l1.01 2.52-29.65 12.28c2.27 4.45 5.8 6.72 10.75 6.72 4.96 0 8.4-2.44 10.92-6.14zm-23.27-7.98l19.82-8.23c-1.09-2.77-4.37-4.7-8.23-4.7-4.95 0-11.84 4.37-11.59 12.93z"/>
+          <path fill="#4285F4" d="M35.29 41.41V32H67c.31 1.64.47 3.58.47 5.68 0 7.06-1.93 15.79-8.15 22.01-6.05 6.3-13.78 9.66-24.02 9.66C16.32 69.35.36 53.89.36 34.91.36 15.93 16.32.47 35.3.47c10.5 0 17.98 4.12 23.6 9.49l-6.64 6.64c-4.03-3.78-9.49-6.72-16.97-6.72-13.86 0-24.7 11.17-24.7 25.03 0 13.86 10.84 25.03 24.7 25.03 8.99 0 14.11-3.61 17.39-6.89 2.66-2.66 4.41-6.46 5.1-11.65l-22.49.01z"/>
+        </svg>
       </div>
 
       <div class="g-search">
