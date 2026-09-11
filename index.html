@@ -15,6 +15,8 @@
     --glass-press: rgba(255,255,255,0.34);
     --glass-border: rgba(255,255,255,0.14);
     --dot-empty: rgba(255,255,255,0.9);
+    --key-size: 76px;
+    --key-gap: 22px;
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
@@ -34,21 +36,46 @@
     inset: 0;
     overflow: hidden;
     touch-action: pan-y;
-    display: flex;
-    flex-direction: column;
     color: var(--ink);
     user-select: none;
   }
 
-  .lockbody {
-    flex: 1 1 auto;
+  /* The 4/5/6 row is pinned exactly to the screen's center point, and the
+     flanks above/below are anchored off that same center line — so the 5
+     key stays dead-center regardless of viewport height (a Safari tab and
+     an installed Home Screen app expose different usable heights, and a
+     flex/grid split based on each flank's own content would drift off
+     center since the two flanks don't hold equal amounts of content). */
+  .keyrow-mid {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .top-flank {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: calc(50% + (var(--key-size) / 2) + var(--key-gap));
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: flex-end;
     gap: 26px;
     padding-top: 14px;
-    padding-bottom: 112px;
+  }
+
+  .bottom-flank {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(50% + (var(--key-size) / 2) + var(--key-gap));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: var(--key-gap);
   }
 
   .headline {
@@ -61,7 +88,7 @@
     text-shadow: 0 1px 10px rgba(0,0,0,0.25);
   }
 
-  .dots { display: flex; gap: 20px; height: 14px; align-items: center; direction: ltr; margin-top: -12px; margin-bottom: 22px; }
+  .dots { display: flex; gap: 20px; height: 14px; align-items: center; direction: ltr; margin-top: -12px; margin-bottom: 52px; }
   .dot {
     width: 13px;
     height: 13px;
@@ -76,19 +103,19 @@
     transform: scale(1.05);
   }
 
-  .keypad {
+  .keyrow {
     display: grid;
-    grid-template-columns: repeat(3, 76px);
-    grid-auto-rows: 76px;
-    gap: 22px;
+    grid-template-columns: repeat(3, var(--key-size));
+    grid-auto-rows: var(--key-size);
+    gap: var(--key-gap);
     justify-content: center;
     direction: ltr;
   }
   @media (max-width: 380px) {
-    .keypad { grid-template-columns: repeat(3, 66px); grid-auto-rows: 66px; gap: 18px; }
+    :root { --key-size: 66px; --key-gap: 18px; }
   }
   @media (max-height: 700px) {
-    .keypad { grid-template-columns: repeat(3, 62px); grid-auto-rows: 62px; gap: 14px; }
+    :root { --key-size: 62px; --key-gap: 14px; }
   }
 
   .key {
@@ -211,27 +238,35 @@
 </head>
 <body>
   <div class="screen">
-    <div class="lockbody">
+    <div class="top-flank">
       <div class="headline" id="headline" lang="he">יש להזין את קוד הגישה</div>
       <div class="dots" id="dots"></div>
-      <div class="keypad">
+      <div class="keyrow">
         <button class="key" data-d="1"><span class="num">1</span><span class="sub"></span></button>
         <button class="key" data-d="2"><span class="num">2</span><span class="sub"><span class="he" lang="he">דהו</span><span class="en">ABC</span></span></button>
         <button class="key" data-d="3"><span class="num">3</span><span class="sub"><span class="he" lang="he">אבג</span><span class="en">DEF</span></span></button>
-        <button class="key" data-d="4"><span class="num">4</span><span class="sub"><span class="he" lang="he">מנ</span><span class="en">GHI</span></span></button>
-        <button class="key" data-d="5"><span class="num">5</span><span class="sub"><span class="he" lang="he">יכל</span><span class="en">JKL</span></span></button>
-        <button class="key" data-d="6"><span class="num">6</span><span class="sub"><span class="he" lang="he">זחט</span><span class="en">MNO</span></span></button>
+      </div>
+    </div>
+    <div class="keyrow keyrow-mid">
+      <button class="key" data-d="4"><span class="num">4</span><span class="sub"><span class="he" lang="he">מנ</span><span class="en">GHI</span></span></button>
+      <button class="key" data-d="5"><span class="num">5</span><span class="sub"><span class="he" lang="he">יכל</span><span class="en">JKL</span></span></button>
+      <button class="key" data-d="6"><span class="num">6</span><span class="sub"><span class="he" lang="he">זחט</span><span class="en">MNO</span></span></button>
+    </div>
+    <div class="bottom-flank">
+      <div class="keyrow">
         <button class="key" data-d="7"><span class="num">7</span><span class="sub"><span class="he" lang="he">רשת</span><span class="en">PQRS</span></span></button>
         <button class="key" data-d="8"><span class="num">8</span><span class="sub"><span class="he" lang="he">צק</span><span class="en">TUV</span></span></button>
         <button class="key" data-d="9"><span class="num">9</span><span class="sub"><span class="he" lang="he">סעפ</span><span class="en">WXYZ</span></span></button>
+      </div>
+      <div class="keyrow">
         <button class="key ghost"></button>
         <button class="key" data-d="0"><span class="num">0</span></button>
         <button class="key ghost"></button>
       </div>
-      <div class="keyrow-bottom" lang="he">
-        <span id="emergency">שיחת חירום</span>
-        <span id="cancel">ביטול</span>
-      </div>
+    </div>
+    <div class="keyrow-bottom" lang="he">
+      <span id="emergency">שיחת חירום</span>
+      <span id="cancel">ביטול</span>
     </div>
   </div>
 
