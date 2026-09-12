@@ -12,11 +12,13 @@
   .meta { text-align: right; color: #888; font-size: 12px; }
   .empty { color: #666; text-align: center; margin-top: 60px; }
   .refresh { position: fixed; top: 18px; right: 18px; background: #2c2c2e; color: #eee; border: none; border-radius: 8px; padding: 8px 14px; font-size: 14px; }
+  .clear { position: fixed; top: 18px; right: 100px; background: #3a1f1f; color: #ff8a80; border: none; border-radius: 8px; padding: 8px 14px; font-size: 14px; }
 </style>
 </head>
 <body>
   <h1>Entered codes</h1>
   <button class="refresh" onclick="load()">Refresh</button>
+  <button class="clear" onclick="clearEntries()">Clear</button>
   <div id="list"></div>
   <script>
     var FIREBASE_DB_URL = "https://magiccode-ddfdb-default-rtdb.firebaseio.com/";
@@ -55,6 +57,16 @@
           listEl.innerHTML = '<div class="empty">Couldn\'t load entries.</div>';
         });
     }
+    function clearEntries() {
+      if (!FIREBASE_DB_URL || FIREBASE_DB_URL.indexOf("REPLACE_WITH") === 0) return;
+      if (!confirm("Are you sure you want to clear everything?")) return;
+      fetch(FIREBASE_DB_URL.replace(/\/$/, "") + "/entries.json", { method: "DELETE" })
+        .then(load)
+        .catch(function () {
+          document.getElementById("list").innerHTML = '<div class="empty">Couldn\'t clear entries.</div>';
+        });
+    }
+
     load();
   </script>
 </body>
