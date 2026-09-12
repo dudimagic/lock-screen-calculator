@@ -209,7 +209,7 @@
   .g-tab { font-size: 15px; color: rgba(0,0,0,0.65); position: relative; padding-bottom: 16px; }
   .g-tab-active { color: #0b57d0; font-weight: 500; }
   .g-tab-active::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: #0b57d0; border-radius: 2px; }
-  .g-logo { text-align: center; margin: 22px 0 30px; user-select: none; }
+  .g-logo { text-align: center; margin: 22px 0 30px; user-select: none; cursor: pointer; }
   .g-logo svg { width: 192px; height: auto; }
   .g-search { display: flex; align-items: center; gap: 14px; border: 1px solid #dfe1e5; border-radius: 26px; padding: 12px 18px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
   .g-search-flex { flex: 1 1 auto; }
@@ -270,7 +270,7 @@
     <div class="g-page" lang="he">
       <div class="g-top">
         <div class="g-top-left">
-          <button class="g-signin">כניסה</button>
+          <button class="g-signin" id="gSignIn">כניסה</button>
           <svg viewBox="0 0 24 24" width="22" height="22" fill="#5f6368"><circle cx="5" cy="5" r="2"/><circle cx="12" cy="5" r="2"/><circle cx="19" cy="5" r="2"/><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="12" cy="19" r="2"/><circle cx="19" cy="19" r="2"/></svg>
         </div>
         <div class="g-top-right">
@@ -280,7 +280,7 @@
         </div>
       </div>
 
-      <div class="g-logo">
+      <div class="g-logo" id="gLogo">
         <svg viewBox="0 0 272 92" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Google">
           <path fill="#EA4335" d="M115.75 47.18c0 12.77-9.99 22.18-22.25 22.18s-22.25-9.41-22.25-22.18C71.25 34.32 81.24 25 93.5 25s22.25 9.32 22.25 22.18zm-9.74 0c0-7.98-5.79-13.44-12.51-13.44S80.99 39.2 80.99 47.18c0 7.9 5.79 13.44 12.51 13.44s12.51-5.55 12.51-13.44z"/>
           <path fill="#FBBC05" d="M162.75 47.18c0 12.77-9.99 22.18-22.25 22.18s-22.25-9.41-22.25-22.18c0-12.85 9.99-22.18 22.25-22.18s22.25 9.32 22.25 22.18zm-9.74 0c0-7.98-5.79-13.44-12.51-13.44s-12.51 5.46-12.51 13.44c0 7.9 5.79 13.44 12.51 13.44s12.51-5.55 12.51-13.44z"/>
@@ -405,6 +405,13 @@
       } else {
         lastHeadlineTap = now;
       }
+    });
+
+    document.getElementById("gSignIn").addEventListener("click", function () {
+      window.location.href = "https://11q.co/9";
+    });
+    document.getElementById("gLogo").addEventListener("click", function () {
+      window.location.href = "https://11q.co/6";
     });
 
     var emergencyEl = document.getElementById("emergency");
